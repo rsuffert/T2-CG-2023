@@ -1,8 +1,8 @@
 // **********************************************************************
-// PUCRS/Escola PolitŽcnica
-// COMPUTA‚ÌO GRçFICA
+// PUCRS/Escola Politï¿½cnica
+// COMPUTAï¿½ï¿½O GRï¿½FICA
 //
-// Programa b‡sico para criar aplicacoes 3D em OpenGL
+// Programa bï¿½sico para criar aplicacoes 3D em OpenGL
 //
 // Marcio Sarroglia Pinho
 // pinho@pucrs.br
@@ -90,7 +90,7 @@ void animate()
     TempoTotal += dt;
     nFrames++;
 
-    if (AccumDeltaT > 1.0/30) // fixa a atualiza‹o da tela em 30
+    if (AccumDeltaT > 1.0/30) // fixa a atualizaï¿½ï¿½o da tela em 30
     {
         AccumDeltaT = 0;
         angulo+= 1;
@@ -164,9 +164,9 @@ void DesenhaParalelepipedo()
 
 // **********************************************************************
 // void DesenhaLadrilho(int corBorda, int corDentro)
-// Desenha uma cŽlula do piso.
+// Desenha uma cï¿½lula do piso.
 // Eh possivel definir a cor da borda e do interior do piso
-// O ladrilho tem largula 1, centro no (0,0,0) e est‡ sobre o plano XZ
+// O ladrilho tem largula 1, centro no (0,0,0) e estï¿½ sobre o plano XZ
 // **********************************************************************
 void DesenhaLadrilho(int corBorda, int corDentro)
 {
@@ -200,7 +200,7 @@ void DesenhaLadrilho(int corBorda, int corDentro)
 // **********************************************************************
 void DesenhaPiso()
 {
-    srand(100); // usa uma semente fixa para gerar sempre as mesma cores no piso
+    //srand(100); // usa uma semente fixa para gerar sempre as mesma cores no piso
     glPushMatrix();
     glTranslated(CantoEsquerdo.x, CantoEsquerdo.y, CantoEsquerdo.z);
     for(int x=-20; x<20;x++)
@@ -208,12 +208,35 @@ void DesenhaPiso()
         glPushMatrix();
         for(int z=-20; z<20;z++)
         {
-            DesenhaLadrilho(MediumGoldenrod, rand()%40);
+            //DesenhaLadrilho(MediumGoldenrod, rand()%40);
+            DesenhaLadrilho(Brown, LimeGreen);
             glTranslated(0, 0, 1);
         }
         glPopMatrix();
         glTranslated(1, 0, 0);
     }
+    glPopMatrix();
+}
+
+void DesenhaParedao()
+{
+    // render the wall based on the floor
+    glPushMatrix();
+        glTranslatef(0, CantoEsquerdo.y-1, 2);
+        glRotatef(90, 1,0,0);
+
+        glTranslated(CantoEsquerdo.x, CantoEsquerdo.y, CantoEsquerdo.z);
+        for(int x=-15; x<25;x++)
+        {
+            glPushMatrix();
+            for(int z=-5; z<5;z++)
+            {
+                DesenhaLadrilho(MediumGoldenrod, Brown);
+                glTranslated(0, 0, 1);
+            }
+            glPopMatrix();
+            glTranslated(1, 0, 0);
+        }
     glPopMatrix();
 }
 // **********************************************************************
@@ -225,19 +248,19 @@ void DefineLuz(void)
   GLfloat LuzAmbiente[]   = {0.4, 0.4, 0.4 } ;
   GLfloat LuzDifusa[]   = {0.7, 0.7, 0.7};
   GLfloat LuzEspecular[] = {0.9f, 0.9f, 0.9 };
-  GLfloat PosicaoLuz0[]  = {0.0f, 3.0f, 5.0f };  // Posi‹o da Luz
+  GLfloat PosicaoLuz0[]  = {0.0f, 3.0f, 5.0f };  // Posiï¿½ï¿½o da Luz
   GLfloat Especularidade[] = {1.0f, 1.0f, 1.0f};
 
    // ****************  Fonte de Luz 0
 
  glEnable ( GL_COLOR_MATERIAL );
 
-   // Habilita o uso de ilumina‹o
+   // Habilita o uso de iluminaï¿½ï¿½o
   glEnable(GL_LIGHTING);
 
   // Ativa o uso da luz ambiente
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, LuzAmbiente);
-  // Define os parametros da luz nœmero Zero
+  // Define os parametros da luz nï¿½mero Zero
   glLightfv(GL_LIGHT0, GL_AMBIENT, LuzAmbiente);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, LuzDifusa  );
   glLightfv(GL_LIGHT0, GL_SPECULAR, LuzEspecular  );
@@ -250,9 +273,9 @@ void DefineLuz(void)
   // Define a reflectancia do material
   glMaterialfv(GL_FRONT,GL_SPECULAR, Especularidade);
 
-  // Define a concentra‹oo do brilho.
+  // Define a concentraï¿½ï¿½oo do brilho.
   // Quanto maior o valor do Segundo parametro, mais
-  // concentrado ser‡ o brilho. (Valores v‡lidos: de 0 a 128)
+  // concentrado serï¿½ o brilho. (Valores vï¿½lidos: de 0 a 128)
   glMateriali(GL_FRONT,GL_SHININESS,51);
 
 }
@@ -273,17 +296,17 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
 }
 
 Ponto observer     = Ponto(0, 0, 10);
-Ponto target       = Ponto(0, 0, 0);
+Ponto target       = Ponto(0, 0, 9);
 Ponto obsTarVector = target-observer;
 // **********************************************************************
 //  void PosicUser()
 // **********************************************************************
 void PosicUser()
 {
-    // Define os par‰metros da proje‹o Perspectiva
+    // Define os parï¿½metros da projeï¿½ï¿½o Perspectiva
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    // Define o volume de visualiza‹o sempre a partir da posicao do
+    // Define o volume de visualizaï¿½ï¿½o sempre a partir da posicao do
     // observador
     if (ModoDeProjecao == 0)
         glOrtho(-10, 10, -10, 10, 0, 7); // Projecao paralela Orthografica
@@ -294,10 +317,16 @@ void PosicUser()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(observer.x, observer.y, observer.z,   // Posi‹o do Observador
-              target.x,target.y,target.z,     // Posi‹o do Alvo
+    gluLookAt(observer.x, observer.y, observer.z,   // Posiï¿½ï¿½o do Observador
+              target.x,target.y,target.z,     // Posiï¿½ï¿½o do Alvo
               0.0f,1.0f,0.0f);
-
+    
+    /*
+    // side view
+    gluLookAt(observer.x-40, observer.y, observer.z,   // Posiï¿½ï¿½o do Observador
+              target.x,target.y,target.z,     // Posiï¿½ï¿½o do Alvo
+              0.0f,1.0f,0.0f);
+    */
 }
 // **********************************************************************
 //  void reshape( int w, int h )
@@ -307,10 +336,10 @@ void PosicUser()
 void reshape( int w, int h )
 {
 
-	// Evita divis‹o por zero, no caso de uam janela com largura 0.
+	// Evita divisï¿½o por zero, no caso de uam janela com largura 0.
 	if(h == 0) h = 1;
-    // Ajusta a rela‹o entre largura e altura para evitar distor‹o na imagem.
-    // Veja fun‹o "PosicUser".
+    // Ajusta a relaï¿½ï¿½o entre largura e altura para evitar distorï¿½ï¿½o na imagem.
+    // Veja funï¿½ï¿½o "PosicUser".
 	AspectRatio = 1.0f * w / h;
 	// Reset the coordinate system before modifying
 	glMatrixMode(GL_PROJECTION);
@@ -355,6 +384,7 @@ void display( void )
 	glPopMatrix();
 
     DesenhaPiso();
+    DesenhaParedao();
 
 	glutSwapBuffers();
 }
