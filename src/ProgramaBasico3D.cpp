@@ -296,7 +296,7 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
 }
 
 Ponto observer     = Ponto(-9, 0, 35);
-Ponto target       = Ponto(-9, 0, 34);
+Ponto target       = Ponto(-9, 0, 34.92);
 Ponto obsTarVector = target-observer;
 // **********************************************************************
 //  void PosicUser()
