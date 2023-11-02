@@ -203,10 +203,10 @@ void DesenhaPiso()
     //srand(100); // usa uma semente fixa para gerar sempre as mesma cores no piso
     glPushMatrix();
     glTranslated(CantoEsquerdo.x, CantoEsquerdo.y, CantoEsquerdo.z);
-    for(int x=-20; x<20;x++)
+    for(int x=0; x<25;x++)
     {
         glPushMatrix();
-        for(int z=-20; z<20;z++)
+        for(int z=0; z<50;z++)
         {
             //DesenhaLadrilho(MediumGoldenrod, rand()%40);
             DesenhaLadrilho(Brown, LimeGreen);
@@ -218,18 +218,18 @@ void DesenhaPiso()
     glPopMatrix();
 }
 
+
 void DesenhaParedao()
 {
     // render the wall based on the floor
     glPushMatrix();
-        glTranslatef(0, CantoEsquerdo.y-1, 2);
         glRotatef(90, 1,0,0);
 
-        glTranslated(CantoEsquerdo.x, CantoEsquerdo.y, CantoEsquerdo.z);
-        for(int x=-15; x<25;x++)
+        glTranslated(CantoEsquerdo.x, CantoEsquerdo.z+25, CantoEsquerdo.y-12.5);
+        for(int x=0; x<25;x++)
         {
             glPushMatrix();
-            for(int z=-5; z<5;z++)
+            for(int y=0; y<15;y++)
             {
                 DesenhaLadrilho(MediumGoldenrod, Brown);
                 glTranslated(0, 0, 1);
@@ -295,8 +295,8 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
     glFrustum( -fW, fW, -fH, fH, zNear, zFar );
 }
 
-Ponto observer     = Ponto(0, 0, 10);
-Ponto target       = Ponto(0, 0, 9);
+Ponto observer     = Ponto(-9, 0, 35);
+Ponto target       = Ponto(-9, 0, 34);
 Ponto obsTarVector = target-observer;
 // **********************************************************************
 //  void PosicUser()
@@ -323,7 +323,7 @@ void PosicUser()
     
     /*
     // side view
-    gluLookAt(observer.x-40, observer.y, observer.z,   // Posi��o do Observador
+    gluLookAt(observer.x-60, observer.y, observer.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     */
@@ -358,34 +358,12 @@ void reshape( int w, int h )
 float PosicaoZ = -30;
 void display( void )
 {
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 	DefineLuz();
-
 	PosicUser();
-
 	glMatrixMode(GL_MODELVIEW);
-
-	glPushMatrix();
-		glTranslatef ( 5.0f, 0.0f, 3.0f );
-        glRotatef(angulo,0,1,0);
-		glColor3f(0.5f,0.0f,0.0f); // Vermelho
-        glutSolidCube(2);
-        //DesenhaCubo(1);
-	glPopMatrix();
-
-	glPushMatrix();
-		glTranslatef ( -4.0f, 0.0f, 2.0f );
-		glRotatef(angulo,0,1,0);
-		glColor3f(0.6156862745, 0.8980392157, 0.9803921569); // Azul claro
-        glutSolidCube(2);
-		//DesenhaCubo(1);
-	glPopMatrix();
-
     DesenhaPiso();
     DesenhaParedao();
-
 	glutSwapBuffers();
 }
 
@@ -397,6 +375,8 @@ void display( void )
 // **********************************************************************
 void keyboard ( unsigned char key, int x, int y )
 {
+    printf("Observer: (%.2f, %.2f, %.2f)\n", observer.x, observer.y, observer.z);
+    printf("Target: (%.2f, %.2f, %.2f)\n", target.x, target.y, target.z);
 	switch ( key )
 	{
     case 27:        // Termina o programa qdo
