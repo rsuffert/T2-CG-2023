@@ -204,8 +204,6 @@ void DesenhaLadrilho(int corBorda, int corDentro)
         glVertex3f( 0.5f,  0.0f,  0.5f);
         glVertex3f( 0.5f,  0.0f, -0.5f);
     glEnd();
-
-
 }
 
 // **********************************************************************
@@ -231,7 +229,6 @@ void DesenhaPiso()
     }
     glPopMatrix();
 }
-
 
 void DesenhaParedao()
 {
@@ -331,6 +328,7 @@ void PosicUser()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
     // third person view (from behind)
     gluLookAt(observer.x, observer.y+3, observer.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
@@ -339,6 +337,13 @@ void PosicUser()
     /*
     // top view
     gluLookAt(observer.x, observer.y+10, observer.z,   // Posi��o do Observador
+              target.x,target.y,target.z,     // Posi��o do Alvo
+              0.0f,1.0f,0.0f);
+    */
+
+   /*
+   // side view
+    gluLookAt(observer.x+5, observer.y+1, observer.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     */
@@ -364,18 +369,39 @@ void reshape( int w, int h )
     //cout << "Largura" << w << endl;
 
 	PosicUser();
-
 }
 
-void DesenhaParalelepipedo(float red, float green, float blue, float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotationAngle)
+void DesenhaParalelepipedo(float red, float green, float blue, float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotationAngleX, float rotationAngleY, float rotationAngleZ)
 {
     glPushMatrix();
         glColor3f(red, green, blue);
         glTranslatef(posX, posY, posZ);
+        glRotatef(rotationAngleX, 1.0,0.0,0.0);
+        glRotatef(rotationAngleY, 0.0,1.0,0.0);
+        glRotatef(rotationAngleZ, 0.0,0.0,1.0);
         glScalef(scaleX, scaleY, scaleZ);
-        glRotatef(rotationAngle, 0.0,1.0,0.0);
         glutSolidCube(2);
         //DesenhaCubo(1);
+    glPopMatrix();
+}
+
+void DesenhaCanhao(float currentRotationAngle, float currentCannonAngle)
+{
+	glPushMatrix();
+        glTranslatef(observer.x, observer.y, observer.z);
+        glRotatef(currentRotationAngle, 0.0,1.0,0.0);
+
+        // desenha base do canhao
+        glColor3f(0.678, 0.9, 0.902);
+        glScalef(0.5, 0.5, 1);
+        glutSolidCube(2);
+        
+        // desenha cano do canhao
+        glColor3f(0.9412, 0.5725, 0.058);
+        glTranslatef(0, 1.15, -0.7);
+        glRotatef(currentCannonAngle, 1.0,0.0,0.0);
+        glScalef(0.15, 0.15, 0.35);
+        glutSolidCube(2);
     glPopMatrix();
 }
 
@@ -383,6 +409,8 @@ void DesenhaParalelepipedo(float red, float green, float blue, float posX, float
 //  void display( void )
 // **********************************************************************
 float currentRotationAngle = 0.0;
+float currentCannonAngle = 0.0;
+Ponto vetDirecaoCanhao = Ponto(1,0,0);
 float PosicaoZ = -30;
 void display( void )
 {
@@ -392,8 +420,8 @@ void display( void )
 	glMatrixMode(GL_MODELVIEW);
     DesenhaPiso();
     DesenhaParedao();
-    DesenhaParalelepipedo(0.678,0.9,0.902, observer.x,observer.y,observer.z, 0.5,0.4,1, currentRotationAngle); // cannon's base
-	glutSwapBuffers();
+    DesenhaCanhao(currentRotationAngle, currentCannonAngle);
+    glutSwapBuffers();
 }
 
 
@@ -407,8 +435,8 @@ void keyboard ( unsigned char key, int x, int y )
 	switch ( key )
         {
         case 27:        // Termina o programa qdo
-        exit ( 0 );   // a tecla ESC for pressionada
-        break;
+            exit ( 0 );   // a tecla ESC for pressionada
+            break;
         case 'p':
             ModoDeProjecao = !ModoDeProjecao;
             glutPostRedisplay();
@@ -418,14 +446,14 @@ void keyboard ( unsigned char key, int x, int y )
             init();
             glutPostRedisplay();
             break;
-        case 'k': // mover a cabeca (alvo) para a esquerda
-            currentRotationAngle += 5.0;
-            obsTarVector.rotacionaY(5);
+        case 'a': // mover a cabeca (alvo) para a esquerda
+            currentRotationAngle += 1.5;
+            obsTarVector.rotacionaY(1.5);
             target = observer + obsTarVector;
             break;
-        case 'l': // mover a cabeca (alvo) para a direita
-            currentRotationAngle -= 5.0;
-            obsTarVector.rotacionaY(-5);
+        case 'd': // mover a cabeca (alvo) para a direita
+            currentRotationAngle -= 1.5;
+            obsTarVector.rotacionaY(-1.5);
             target = observer + obsTarVector;
             break;
         case 'w': // andar para a frente
@@ -451,10 +479,12 @@ void arrow_keys ( int a_keys, int x, int y )
 	switch ( a_keys )
 	{
 		case GLUT_KEY_UP:       // When Up Arrow Is Pressed...
-			glutFullScreen ( ); // Go Into Full Screen Mode
+			if (currentCannonAngle+5 > 60) currentCannonAngle = 60;
+            else                           currentCannonAngle += 5;
 			break;
 	    case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
-			glutInitWindowSize  ( 700, 500 );
+			if (currentCannonAngle-5 < 0) currentCannonAngle = 0;
+            else                          currentCannonAngle -= 5;
 			break;
 		default:
 			break;
