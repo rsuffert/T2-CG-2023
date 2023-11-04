@@ -152,14 +152,28 @@ void DesenhaCubo(float tamAresta)
     glEnd();
 
 }
-void DesenhaParalelepipedo()
-{
-    glPushMatrix();
-        glTranslatef(0,0,-1);
-        glScalef(1,1,2);
-        glutSolidCube(2);
-        //DesenhaCubo(1);
-    glPopMatrix();
+
+Ponto CalculaPonto(Ponto p) {
+
+    GLfloat ponto_novo[4];
+    GLfloat matriz_gl[4][4];
+    int  i;
+
+    
+    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
+
+    for(i=0; i<4; i++) {
+        ponto_novo[i] = matriz_gl[0][i] * p.x +
+                        matriz_gl[1][i] * p.y +
+                        matriz_gl[2][i] * p.z +
+                        matriz_gl[3][i];
+    }
+    Ponto out;
+    out.x = ponto_novo[0];
+    out.y = ponto_novo[1];
+    out.z = -ponto_novo[2];
+
+    return out;
 }
 
 // **********************************************************************
@@ -317,13 +331,14 @@ void PosicUser()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(observer.x, observer.y, observer.z,   // Posi��o do Observador
+    // third person view (from behind)
+    gluLookAt(observer.x, observer.y+3, observer.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     
     /*
-    // side view
-    gluLookAt(observer.x-60, observer.y, observer.z,   // Posi��o do Observador
+    // top view
+    gluLookAt(observer.x, observer.y+10, observer.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     */
@@ -352,9 +367,22 @@ void reshape( int w, int h )
 
 }
 
+void DesenhaParalelepipedo(float red, float green, float blue, float posX, float posY, float posZ, float scaleX, float scaleY, float scaleZ, float rotationAngle)
+{
+    glPushMatrix();
+        glColor3f(red, green, blue);
+        glTranslatef(posX, posY, posZ);
+        glScalef(scaleX, scaleY, scaleZ);
+        glRotatef(rotationAngle, 0.0,1.0,0.0);
+        glutSolidCube(2);
+        //DesenhaCubo(1);
+    glPopMatrix();
+}
+
 // **********************************************************************
 //  void display( void )
 // **********************************************************************
+float currentRotationAngle = 0.0;
 float PosicaoZ = -30;
 void display( void )
 {
@@ -364,6 +392,7 @@ void display( void )
 	glMatrixMode(GL_MODELVIEW);
     DesenhaPiso();
     DesenhaParedao();
+    DesenhaParalelepipedo(0.678,0.9,0.902, observer.x,observer.y,observer.z, 0.5,0.4,1, currentRotationAngle); // cannon's base
 	glutSwapBuffers();
 }
 
@@ -375,41 +404,41 @@ void display( void )
 // **********************************************************************
 void keyboard ( unsigned char key, int x, int y )
 {
-    printf("Observer: (%.2f, %.2f, %.2f)\n", observer.x, observer.y, observer.z);
-    printf("Target: (%.2f, %.2f, %.2f)\n", target.x, target.y, target.z);
 	switch ( key )
-	{
-    case 27:        // Termina o programa qdo
-      exit ( 0 );   // a tecla ESC for pressionada
-      break;
-    case 'p':
-        ModoDeProjecao = !ModoDeProjecao;
-        glutPostRedisplay();
+        {
+        case 27:        // Termina o programa qdo
+        exit ( 0 );   // a tecla ESC for pressionada
         break;
-    case 'e':
-        ModoDeExibicao = !ModoDeExibicao;
-        init();
-        glutPostRedisplay();
-        break;
-    case 'k': // mover a cabeca (alvo) para a esquerda
-        obsTarVector.rotacionaY(5);
-        target = observer + obsTarVector;
-        break;
-    case 'l': // mover a cabeca (alvo) para a direita
-        obsTarVector.rotacionaY(-5);
-        target = observer + obsTarVector;
-        break;
-    case 'w': // andar para a frente
-        observer = observer + obsTarVector;
-        target = target + obsTarVector;
-        break;
-    case 's': // andar para tras
-        observer = observer - obsTarVector;
-        target = target - obsTarVector;
-        break;
-    default:
-            cout << key;
-  }
+        case 'p':
+            ModoDeProjecao = !ModoDeProjecao;
+            glutPostRedisplay();
+            break;
+        case 'e':
+            ModoDeExibicao = !ModoDeExibicao;
+            init();
+            glutPostRedisplay();
+            break;
+        case 'k': // mover a cabeca (alvo) para a esquerda
+            currentRotationAngle += 5.0;
+            obsTarVector.rotacionaY(5);
+            target = observer + obsTarVector;
+            break;
+        case 'l': // mover a cabeca (alvo) para a direita
+            currentRotationAngle -= 5.0;
+            obsTarVector.rotacionaY(-5);
+            target = observer + obsTarVector;
+            break;
+        case 'w': // andar para a frente
+            observer = observer + obsTarVector;
+            target = target + obsTarVector;
+            break;
+        case 's': // andar para tras
+            observer = observer - obsTarVector;
+            target = target - obsTarVector;
+            break;
+        default:
+                cout << key;
+    }
 }
 
 // **********************************************************************
