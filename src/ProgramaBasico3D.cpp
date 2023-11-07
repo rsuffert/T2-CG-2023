@@ -11,6 +11,8 @@
 #include <iostream>
 #include <cmath>
 #include <ctime>
+#include <vector>
+#include <array>
 
 using namespace std;
 
@@ -76,7 +78,6 @@ void init(void)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     else
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
 }
 
 // **********************************************************************
@@ -98,9 +99,9 @@ void animate()
     }
     if (TempoTotal > 5.0)
     {
-        cout << "Tempo Acumulado: "  << TempoTotal << " segundos. " ;
-        cout << "Nros de Frames sem desenho: " << nFrames << endl;
-        cout << "FPS(sem desenho): " << nFrames/TempoTotal << endl;
+        //cout << "Tempo Acumulado: "  << TempoTotal << " segundos. " ;
+        //cout << "Nros de Frames sem desenho: " << nFrames << endl;
+        //cout << "FPS(sem desenho): " << nFrames/TempoTotal << endl;
         TempoTotal = 0;
         nFrames = 0;
     }
@@ -306,9 +307,9 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
     glFrustum( -fW, fW, -fH, fH, zNear, zFar );
 }
 
-Ponto observer     = Ponto(-9, 0, 35);
+Ponto player       = Ponto(-9, 0, 35);
 Ponto target       = Ponto(-9, 0, 34.92);
-Ponto obsTarVector = target-observer;
+Ponto obsTarVector = target-player;
 // **********************************************************************
 //  void PosicUser()
 // **********************************************************************
@@ -330,24 +331,25 @@ void PosicUser()
     glLoadIdentity();
 
     // third person view (from behind)
-    gluLookAt(observer.x, observer.y+3, observer.z+7,   // Posi��o do Observador
+    gluLookAt(player.x, player.y+3, player.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     
     /*
     // top view
-    gluLookAt(observer.x, observer.y+10, observer.z,   // Posi��o do Observador
+    gluLookAt(player.x, player.y+10, player.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     */
 
    /*
    // side view
-    gluLookAt(observer.x+5, observer.y+1, observer.z,   // Posi��o do Observador
+    gluLookAt(player.x+5, player.y+1, player.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
     */
 }
+
 // **********************************************************************
 //  void reshape( int w, int h )
 //		trata o redimensionamento da janela OpenGL
@@ -385,10 +387,13 @@ void DesenhaParalelepipedo(float red, float green, float blue, float posX, float
     glPopMatrix();
 }
 
+const float CANNON_OFFSET_TO_BASE_X = 0.0;
+const float CANNON_OFFSET_TO_BASE_Y = 1.15;
+const float CANNON_OFFSET_TO_BASE_Z = -0.7;
 void DesenhaCanhao(float currentRotationAngle, float currentCannonAngle)
 {
 	glPushMatrix();
-        glTranslatef(observer.x, observer.y, observer.z);
+        glTranslatef(player.x, player.y, player.z);
         glRotatef(currentRotationAngle, 0.0,1.0,0.0);
 
         // desenha base do canhao
@@ -398,11 +403,61 @@ void DesenhaCanhao(float currentRotationAngle, float currentCannonAngle)
         
         // desenha cano do canhao
         glColor3f(0.9412, 0.5725, 0.058);
-        glTranslatef(0, 1.15, -0.7);
+        glTranslatef(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
         glRotatef(currentCannonAngle, 1.0,0.0,0.0);
         glScalef(0.15, 0.15, 0.35);
         glutSolidCube(2);
     glPopMatrix();
+}
+
+// **************************************************************
+void TracaPontosDeControle(Ponto PC[])
+{
+    glPointSize(10);
+    glBegin(GL_POINTS);
+        glVertex3f(PC[0].x, PC[0].y, PC[0].z);
+        glVertex3f(PC[1].x, PC[1].y, PC[1].z);
+        glVertex3f(PC[2].x, PC[2].y, PC[2].z);
+    glEnd();
+}
+// **************************************************************
+Ponto CalculaBezier3(Ponto* PC, double t)
+{
+    Ponto P;
+    double UmMenosT = 1-t;
+
+    P =  PC[0] * UmMenosT * UmMenosT + PC[1] * 2 * UmMenosT * t + PC[2] * t*t;
+    return P;
+}
+
+vector<array<Ponto,3>> trajetoriasDosTiros;
+vector<double> parametrosTrajetoriasTiros;
+void DesenhaTiros()
+{
+    // TODO: calcular colisao
+    for (int i=0; i<trajetoriasDosTiros.size(); i++)
+    {
+        /*
+        printf("Calculando o ponto atual da trajetoria (parametro %.2f):", parametrosTrajetoriasTiros[i]);
+        Ponto* traj = trajetoriasDosTiros[i].data();
+        traj[0].imprime("\tA = ");
+        traj[1].imprime(" B = ");
+        traj[2].imprime(" C = ");
+        printf("\n");
+        */
+
+        if (parametrosTrajetoriasTiros[i] > 1.0) // o projetil ja terminou a trajetoria ao longo da curva
+        {
+            trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
+            parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
+        }
+        else // o projetil ainda precisa se deslocar e nao terminou a trajetoria
+        {
+            Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
+            // TODO: renderizar o projétil
+            parametrosTrajetoriasTiros[i] += 0.02;
+        }
+    }
 }
 
 // **********************************************************************
@@ -421,19 +476,20 @@ void display( void )
     DesenhaPiso();
     DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
+    DesenhaTiros();
     glutSwapBuffers();
 }
-
 
 // **********************************************************************
 //  void keyboard ( unsigned char key, int x, int y )
 //
 //
 // **********************************************************************
+const float FORCA_TIRO = 2;
 void keyboard ( unsigned char key, int x, int y )
 {
 	switch ( key )
-        {
+    {
         case 27:        // Termina o programa qdo
             exit ( 0 );   // a tecla ESC for pressionada
             break;
@@ -449,23 +505,48 @@ void keyboard ( unsigned char key, int x, int y )
         case 'a': // mover a cabeca (alvo) para a esquerda
             currentRotationAngle += 1.5;
             obsTarVector.rotacionaY(1.5);
-            target = observer + obsTarVector;
+            vetDirecaoCanhao = Ponto(1,0,0);
+            vetDirecaoCanhao.rotacionaZ(currentCannonAngle);
+            vetDirecaoCanhao.rotacionaY(currentRotationAngle);
+            target = player + obsTarVector;
             break;
         case 'd': // mover a cabeca (alvo) para a direita
             currentRotationAngle -= 1.5;
             obsTarVector.rotacionaY(-1.5);
-            target = observer + obsTarVector;
+            vetDirecaoCanhao = Ponto(1,0,0);
+            vetDirecaoCanhao.rotacionaZ(currentCannonAngle);
+            vetDirecaoCanhao.rotacionaY(currentRotationAngle);
+            target = player + obsTarVector;
             break;
         case 'w': // andar para a frente
-            observer = observer + obsTarVector;
+            player = player + obsTarVector;
             target = target + obsTarVector;
             break;
         case 's': // andar para tras
-            observer = observer - obsTarVector;
+            player = player - obsTarVector;
             target = target - obsTarVector;
             break;
-        default:
-                cout << key;
+        case ' ': // disparar o tiro
+            // TODO: arrumar o calculo dos pontos de controle da curva
+            //printf("player/PosicaoVeiculo = (%.2f, %.2f, %.2f)\n", player.x, player.y, player.z);
+            //printf("currentRotationAngle/AnguloVeiculo = %.2f\n", currentRotationAngle);
+            //printf("currentCannonAngle/AnguloCanhao = %.2f\n", currentCannonAngle);
+            //printf("vetDirecaoCanhao/DirecaoDoCanhao = (%.2f, %.2f, %.2f)\n", vetDirecaoCanhao.x, vetDirecaoCanhao.y, vetDirecaoCanhao.z);
+            // calcular os pontos da Bezier
+            Ponto posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
+            Ponto ptoMaximoTrajetoria = posicaoDoCanhao + vetDirecaoCanhao * FORCA_TIRO;
+            float distanciaInicioFim = 2*FORCA_TIRO*cos(currentCannonAngle*M_PI/180);
+            Ponto finalTrajetoria = posicaoDoCanhao+Ponto(distanciaInicioFim, 0, 0);
+            finalTrajetoria.rotacionaY(currentRotationAngle); // para alinhar com o veiculo
+            
+            array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
+            trajetoriasDosTiros.push_back(pontosBezier);
+            parametrosTrajetoriasTiros.push_back(0.0);
+            //printf("A = (%.2f, %.2f, %.2f)\n", posicaoDoCanhao.x, posicaoDoCanhao.y, posicaoDoCanhao.z);
+            //printf("B = (%.2f, %.2f, %.2f)\n", ptoMaximoTrajetoria.x, ptoMaximoTrajetoria.y, ptoMaximoTrajetoria.z);
+            //printf("C = (%.2f, %.2f, %.2f)\n", finalTrajetoria.x, finalTrajetoria.y, finalTrajetoria.z);
+           //cout << "-----------------------------------------------------------------------------------------" << endl;
+            break;
     }
 }
 
@@ -476,15 +557,18 @@ void keyboard ( unsigned char key, int x, int y )
 // **********************************************************************
 void arrow_keys ( int a_keys, int x, int y )
 {
+    float prevCannonAngle = currentCannonAngle;
 	switch ( a_keys )
 	{
 		case GLUT_KEY_UP:       // When Up Arrow Is Pressed...
 			if (currentCannonAngle+5 > 60) currentCannonAngle = 60;
             else                           currentCannonAngle += 5;
+            vetDirecaoCanhao.rotacionaY(currentCannonAngle-prevCannonAngle);
 			break;
 	    case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
 			if (currentCannonAngle-5 < 0) currentCannonAngle = 0;
             else                          currentCannonAngle -= 5;
+            vetDirecaoCanhao.rotacionaY(currentCannonAngle-prevCannonAngle);
 			break;
 		default:
 			break;
