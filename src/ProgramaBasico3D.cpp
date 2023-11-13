@@ -528,11 +528,13 @@ void keyboard ( unsigned char key, int x, int y )
             break;
         case ' ': // disparar o tiro
             // TODO: arrumar o calculo dos pontos de controle da curva
-            //printf("player/PosicaoVeiculo = (%.2f, %.2f, %.2f)\n", player.x, player.y, player.z);
-            //printf("currentRotationAngle/AnguloVeiculo = %.2f\n", currentRotationAngle);
-            //printf("currentCannonAngle/AnguloCanhao = %.2f\n", currentCannonAngle);
-            //printf("vetDirecaoCanhao/DirecaoDoCanhao = (%.2f, %.2f, %.2f)\n", vetDirecaoCanhao.x, vetDirecaoCanhao.y, vetDirecaoCanhao.z);
-            // calcular os pontos da Bezier
+            printf("player/PosicaoVeiculo = (%.2f, %.2f, %.2f)\n", player.x, player.y, player.z);
+            printf("currentRotationAngle/AnguloVeiculo = %.2f\n", currentRotationAngle);
+            printf("currentCannonAngle/AnguloCanhao = %.2f\n", currentCannonAngle);
+            printf("vetDirecaoCanhao/DirecaoDoCanhao = (%.2f, %.2f, %.2f)\n", vetDirecaoCanhao.x, vetDirecaoCanhao.y, vetDirecaoCanhao.z);
+            // calcular os pontos da Bezier: os angulos sendo utilizados estao certos?
+            //                               os offsets estão certos p/ calculo da posicaoDoCanhao?
+            //                               as rotacoes no calculo do vetDirecaoCanhao estao certas? Eh em torno do eixo Z e Y mesmo?
             Ponto posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
             Ponto ptoMaximoTrajetoria = posicaoDoCanhao + vetDirecaoCanhao * FORCA_TIRO;
             float distanciaInicioFim = 2*FORCA_TIRO*cos(currentCannonAngle*M_PI/180);
@@ -542,10 +544,10 @@ void keyboard ( unsigned char key, int x, int y )
             array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
             trajetoriasDosTiros.push_back(pontosBezier);
             parametrosTrajetoriasTiros.push_back(0.0);
-            //printf("A = (%.2f, %.2f, %.2f)\n", posicaoDoCanhao.x, posicaoDoCanhao.y, posicaoDoCanhao.z);
-            //printf("B = (%.2f, %.2f, %.2f)\n", ptoMaximoTrajetoria.x, ptoMaximoTrajetoria.y, ptoMaximoTrajetoria.z);
-            //printf("C = (%.2f, %.2f, %.2f)\n", finalTrajetoria.x, finalTrajetoria.y, finalTrajetoria.z);
-           //cout << "-----------------------------------------------------------------------------------------" << endl;
+            printf("A = (%.2f, %.2f, %.2f)\n", posicaoDoCanhao.x, posicaoDoCanhao.y, posicaoDoCanhao.z);
+            printf("B = (%.2f, %.2f, %.2f)\n", ptoMaximoTrajetoria.x, ptoMaximoTrajetoria.y, ptoMaximoTrajetoria.z);
+            printf("C = (%.2f, %.2f, %.2f)\n", finalTrajetoria.x, finalTrajetoria.y, finalTrajetoria.z);
+            //cout << "-----------------------------------------------------------------------------------------" << endl;
             break;
     }
 }
