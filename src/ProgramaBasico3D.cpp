@@ -13,9 +13,11 @@
 #include <ctime>
 #include <vector>
 #include <array>
+#include "LeitorObjeto3D.h"
+#include <ctime>
+#include <cstdlib>
 
 using namespace std;
-
 
 #ifdef WIN32
 #include <windows.h>
@@ -35,9 +37,18 @@ using namespace std;
 #include "Temporizador.h"
 #include "ListaDeCoresRGB.h"
 #include "Ponto.h"
+//#include <SOIL/SOIL.h>
+
+#define N_AMIGOS_INIMIGOS 20
+Objeto3D vacaModel;
+struct Vaca {
+    float posX, posY, posZ;
+    bool inimigo, vivo;
+};
+Vaca* vacas;
+
 Temporizador T;
 double AccumDeltaT=0;
-
 
 GLfloat AspectRatio, angulo=0;
 
@@ -78,6 +89,22 @@ void init(void)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     else
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    // inicializar objetos 3d
+    vacaModel = Objeto3D();
+    vacaModel.LeObjeto("Vaca.tri");
+    vacas = new Vaca[N_AMIGOS_INIMIGOS];
+    for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
+    {
+        Vaca& v = vacas[i];
+        v.posX = (CantoEsquerdo.x+2) + (rand() % 22);
+        v.posY = 1.5;
+        v.posZ = CantoEsquerdo.z + (rand() % 22);
+        v.inimigo = i%2==0; // metade de amigos e metade de inimigos
+        v.vivo = true;
+    }
 }
 
 // **********************************************************************
@@ -308,7 +335,7 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
 }
 
 Ponto player       = Ponto(-9, 0, 35);
-Ponto target       = Ponto(-9, 0, 34.92);
+Ponto target       = Ponto(-9, 0, 34.94);
 Ponto obsTarVector = target-player;
 // **********************************************************************
 //  void PosicUser()
@@ -330,10 +357,18 @@ void PosicUser()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // third person view (from behind)
+    // third person view (from behind) following the player
     gluLookAt(player.x, player.y+3, player.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
+
+   /*
+    gluLookAt(
+        -9, 3.5, 43,
+        -9, 0, 34.92,
+        0.0f, 1.0f, 0.0f
+    );
+    */
     
     /*
     // top view
@@ -382,7 +417,7 @@ void DesenhaParalelepipedo(float red, float green, float blue, float posX, float
         glRotatef(rotationAngleY, 0.0,1.0,0.0);
         glRotatef(rotationAngleZ, 0.0,0.0,1.0);
         glScalef(scaleX, scaleY, scaleZ);
-        glutSolidCube(2);
+        glutSolidCube(1);
         //DesenhaCubo(1);
     glPopMatrix();
 }
@@ -398,7 +433,7 @@ void DesenhaCanhao(float currentRotationAngle, float currentCannonAngle)
 
         // desenha base do canhao
         glColor3f(0.678, 0.9, 0.902);
-        glScalef(0.5, 0.5, 1);
+        glScalef(2, 1, 3);
         glutSolidCube(2);
         
         // desenha cano do canhao
@@ -408,17 +443,6 @@ void DesenhaCanhao(float currentRotationAngle, float currentCannonAngle)
         glScalef(0.15, 0.15, 0.35);
         glutSolidCube(2);
     glPopMatrix();
-}
-
-// **************************************************************
-void TracaPontosDeControle(Ponto PC[])
-{
-    glPointSize(10);
-    glBegin(GL_POINTS);
-        glVertex3f(PC[0].x, PC[0].y, PC[0].z);
-        glVertex3f(PC[1].x, PC[1].y, PC[1].z);
-        glVertex3f(PC[2].x, PC[2].y, PC[2].z);
-    glEnd();
 }
 // **************************************************************
 Ponto CalculaBezier3(Ponto* PC, double t)
@@ -460,6 +484,16 @@ void DesenhaTiros()
     }
 }
 
+Ponto posicaoDoCanhao;
+Ponto ptoMaximoTrajetoria;
+Ponto finalTrajetoria;
+void DesenhaLinha(Ponto p1, Ponto p2) {
+    glBegin(GL_LINES);
+        glVertex3f(p1.x, p1.y, p1.z);
+        glVertex3f(p2.x, p2.y, p2.z);
+    glEnd();
+}
+
 // **********************************************************************
 //  void display( void )
 // **********************************************************************
@@ -477,6 +511,26 @@ void display( void )
     DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
     DesenhaTiros();
+    DesenhaLinha(posicaoDoCanhao, ptoMaximoTrajetoria);
+    DesenhaLinha(ptoMaximoTrajetoria, finalTrajetoria);
+
+    // exibir as vacas
+    for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
+    {
+        Vaca& v = vacas[i];
+        //printf("Vaca(%.2f, %.2f, %.2f)\n", v.posX, v.posY, v.posZ);
+        glPushMatrix();
+            glTranslatef(v.posX, v.posY, v.posZ);
+            glRotatef(-100, 1, 0, 0);
+            glRotatef(60, 0, 0, 1);
+            //glScalef(0.05, 0.05, 0.05);
+            glScalef(0.07, 0.07, 0.07);
+            if (v.inimigo) glColor3f(1.0f,0.0f,0.0f);
+            else           glColor3f(0.0f, 0.0f, 1.0f);
+            vacaModel.ExibeObjeto();
+        glPopMatrix();
+    }
+
     glutSwapBuffers();
 }
 
@@ -485,9 +539,11 @@ void display( void )
 //
 //
 // **********************************************************************
-const float FORCA_TIRO = 2;
+float forcaTiro = 2;
 void keyboard ( unsigned char key, int x, int y )
 {
+    Ponto temp;
+    float distanciaInicioFim;
 	switch ( key )
     {
         case 27:        // Termina o programa qdo
@@ -519,11 +575,17 @@ void keyboard ( unsigned char key, int x, int y )
             target = player + obsTarVector;
             break;
         case 'w': // andar para a frente
-            player = player + obsTarVector;
+            temp = player + obsTarVector;
+            //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+            //    return;
+            player = temp;
             target = target + obsTarVector;
             break;
         case 's': // andar para tras
-            player = player - obsTarVector;
+            temp = player - obsTarVector;
+            //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+            //    return;
+            player = temp;
             target = target - obsTarVector;
             break;
         case ' ': // disparar o tiro
@@ -535,19 +597,29 @@ void keyboard ( unsigned char key, int x, int y )
             // calcular os pontos da Bezier: os angulos sendo utilizados estao certos?
             //                               os offsets estão certos p/ calculo da posicaoDoCanhao?
             //                               as rotacoes no calculo do vetDirecaoCanhao estao certas? Eh em torno do eixo Z e Y mesmo?
-            Ponto posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
-            Ponto ptoMaximoTrajetoria = posicaoDoCanhao + vetDirecaoCanhao * FORCA_TIRO;
-            float distanciaInicioFim = 2*FORCA_TIRO*cos(currentCannonAngle*M_PI/180);
-            Ponto finalTrajetoria = posicaoDoCanhao+Ponto(distanciaInicioFim, 0, 0);
+            posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
+            ptoMaximoTrajetoria = posicaoDoCanhao + vetDirecaoCanhao * forcaTiro;
+            distanciaInicioFim = 2*forcaTiro*cos(currentCannonAngle*M_PI/180);
+            finalTrajetoria = posicaoDoCanhao+Ponto(distanciaInicioFim, 0, 0);
             finalTrajetoria.rotacionaY(currentRotationAngle); // para alinhar com o veiculo
             
+            /*
             array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
             trajetoriasDosTiros.push_back(pontosBezier);
             parametrosTrajetoriasTiros.push_back(0.0);
+            */
             printf("A = (%.2f, %.2f, %.2f)\n", posicaoDoCanhao.x, posicaoDoCanhao.y, posicaoDoCanhao.z);
             printf("B = (%.2f, %.2f, %.2f)\n", ptoMaximoTrajetoria.x, ptoMaximoTrajetoria.y, ptoMaximoTrajetoria.z);
             printf("C = (%.2f, %.2f, %.2f)\n", finalTrajetoria.x, finalTrajetoria.y, finalTrajetoria.z);
             //cout << "-----------------------------------------------------------------------------------------" << endl;
+            break;
+        case 'l': // aumentar forca do tiro
+            if (forcaTiro+0.5 > 5) return;
+            forcaTiro+=0.5;
+            break;
+        case 'k': // reduzir forca do tiro
+            if (forcaTiro-0.5 < 1) return;
+            forcaTiro-=0.5;
             break;
     }
 }
