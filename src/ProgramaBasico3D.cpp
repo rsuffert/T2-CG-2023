@@ -364,14 +364,12 @@ void PosicUser()
               0.0f,1.0f,0.0f);
     */
 
-   /*
    // third person (static)
     gluLookAt(
         -9, 3.5, 43,
         -9, 0, 34.92,
         0.0f, 1.0f, 0.0f
     );
-    */
     
     /*
     // top view
@@ -380,10 +378,12 @@ void PosicUser()
               0.0f,1.0f,0.0f);
     */
 
+   /*
    // side view
     gluLookAt(player.x+50, player.y+1, player.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
+    */
 }
 
 // **********************************************************************
@@ -589,7 +589,6 @@ void keyboard ( unsigned char key, int x, int y )
             //ptoMaximoTrajetoria = posicaoDoCanhao - Ponto(0, 0, forcaTiro);
             //ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
             //ptoMaximoTrajetoria.rotacionaX(-currentCannonAngle);
-
             posicaoDoCanhao = player;
             ptoMaximoTrajetoria = posicaoDoCanhao;
             ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
@@ -605,12 +604,12 @@ void keyboard ( unsigned char key, int x, int y )
             break;
         }
         case 'l': // aumentar forca do tiro
-            if (forcaTiro+1 > 10) return;
-            forcaTiro+=1;
+            if (forcaTiro+1 > 20) return;
+            forcaTiro+=2;
             break;
         case 'k': // reduzir forca do tiro
             if (forcaTiro-1 < 5) return;
-            forcaTiro-=1;
+            forcaTiro-=2;
             break;
     }
 }
@@ -630,7 +629,7 @@ void arrow_keys ( int a_keys, int x, int y )
             else                           currentCannonAngle += 5;
 			break;
 	    case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
-			if (currentCannonAngle-5 < 15) currentCannonAngle = 0;
+			if (currentCannonAngle-5 < 15) currentCannonAngle = 15;
             else                          currentCannonAngle -= 5;
 			break;
 		default:
