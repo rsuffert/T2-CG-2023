@@ -357,12 +357,15 @@ void PosicUser()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    /*
     // third person view (from behind) following the player
     gluLookAt(player.x, player.y+3, player.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
+    */
 
    /*
+   // third person (static)
     gluLookAt(
         -9, 3.5, 43,
         -9, 0, 34.92,
@@ -377,12 +380,10 @@ void PosicUser()
               0.0f,1.0f,0.0f);
     */
 
-   /*
    // side view
-    gluLookAt(player.x+5, player.y+1, player.z,   // Posi��o do Observador
+    gluLookAt(player.x+50, player.y+1, player.z,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
-    */
 }
 
 // **********************************************************************
@@ -454,6 +455,15 @@ Ponto CalculaBezier3(Ponto* PC, double t)
     return P;
 }
 
+void DesenhaEsfera(Ponto p, float raio)
+{
+    glPushMatrix();
+        glColor3f(1.0, 1.0, 1.0);
+        glTranslatef(p.x, p.y, p.z);
+        glutSolidSphere(raio, 50, 50);
+    glPopMatrix();   
+}
+
 vector<array<Ponto,3>> trajetoriasDosTiros;
 vector<double> parametrosTrajetoriasTiros;
 void DesenhaTiros()
@@ -461,15 +471,6 @@ void DesenhaTiros()
     // TODO: calcular colisao
     for (int i=0; i<trajetoriasDosTiros.size(); i++)
     {
-        /*
-        printf("Calculando o ponto atual da trajetoria (parametro %.2f):", parametrosTrajetoriasTiros[i]);
-        Ponto* traj = trajetoriasDosTiros[i].data();
-        traj[0].imprime("\tA = ");
-        traj[1].imprime(" B = ");
-        traj[2].imprime(" C = ");
-        printf("\n");
-        */
-
         if (parametrosTrajetoriasTiros[i] > 1.0) // o projetil ja terminou a trajetoria ao longo da curva
         {
             trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
@@ -478,7 +479,7 @@ void DesenhaTiros()
         else // o projetil ainda precisa se deslocar e nao terminou a trajetoria
         {
             Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
-            // TODO: renderizar o projétil
+            DesenhaEsfera(localizacaoAtualDoTiro, 1);
             parametrosTrajetoriasTiros[i] += 0.02;
         }
     }
@@ -498,8 +499,8 @@ void DesenhaLinha(Ponto p1, Ponto p2) {
 //  void display( void )
 // **********************************************************************
 float currentRotationAngle = 0.0;
-float currentCannonAngle = 0.0;
-Ponto vetDirecaoCanhao = Ponto(1,0,0);
+float currentCannonAngle = 15.0;
+Ponto vetDirecaoCanhao = Ponto(0, 0, 1);
 float PosicaoZ = -30;
 void display( void )
 {
@@ -508,7 +509,7 @@ void display( void )
 	PosicUser();
 	glMatrixMode(GL_MODELVIEW);
     DesenhaPiso();
-    DesenhaParedao();
+    //DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
     DesenhaTiros();
     DesenhaLinha(posicaoDoCanhao, ptoMaximoTrajetoria);
@@ -539,7 +540,7 @@ void display( void )
 //
 //
 // **********************************************************************
-float forcaTiro = 2;
+float forcaTiro = 5;
 void keyboard ( unsigned char key, int x, int y )
 {
     Ponto temp;
@@ -561,17 +562,11 @@ void keyboard ( unsigned char key, int x, int y )
         case 'a': // mover a cabeca (alvo) para a esquerda
             currentRotationAngle += 1.5;
             obsTarVector.rotacionaY(1.5);
-            vetDirecaoCanhao = Ponto(1,0,0);
-            vetDirecaoCanhao.rotacionaZ(currentCannonAngle);
-            vetDirecaoCanhao.rotacionaY(currentRotationAngle);
             target = player + obsTarVector;
             break;
         case 'd': // mover a cabeca (alvo) para a direita
             currentRotationAngle -= 1.5;
             obsTarVector.rotacionaY(-1.5);
-            vetDirecaoCanhao = Ponto(1,0,0);
-            vetDirecaoCanhao.rotacionaZ(currentCannonAngle);
-            vetDirecaoCanhao.rotacionaY(currentRotationAngle);
             target = player + obsTarVector;
             break;
         case 'w': // andar para a frente
@@ -588,38 +583,34 @@ void keyboard ( unsigned char key, int x, int y )
             player = temp;
             target = target - obsTarVector;
             break;
-        case ' ': // disparar o tiro
+        case ' ': { // disparar o tiro
             // TODO: arrumar o calculo dos pontos de controle da curva
-            printf("player/PosicaoVeiculo = (%.2f, %.2f, %.2f)\n", player.x, player.y, player.z);
-            printf("currentRotationAngle/AnguloVeiculo = %.2f\n", currentRotationAngle);
-            printf("currentCannonAngle/AnguloCanhao = %.2f\n", currentCannonAngle);
-            printf("vetDirecaoCanhao/DirecaoDoCanhao = (%.2f, %.2f, %.2f)\n", vetDirecaoCanhao.x, vetDirecaoCanhao.y, vetDirecaoCanhao.z);
-            // calcular os pontos da Bezier: os angulos sendo utilizados estao certos?
-            //                               os offsets estão certos p/ calculo da posicaoDoCanhao?
-            //                               as rotacoes no calculo do vetDirecaoCanhao estao certas? Eh em torno do eixo Z e Y mesmo?
-            posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
-            ptoMaximoTrajetoria = posicaoDoCanhao + vetDirecaoCanhao * forcaTiro;
-            distanciaInicioFim = 2*forcaTiro*cos(currentCannonAngle*M_PI/180);
-            finalTrajetoria = posicaoDoCanhao+Ponto(distanciaInicioFim, 0, 0);
-            finalTrajetoria.rotacionaY(currentRotationAngle); // para alinhar com o veiculo
+            //posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
+            //ptoMaximoTrajetoria = posicaoDoCanhao - Ponto(0, 0, forcaTiro);
+            //ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
+            //ptoMaximoTrajetoria.rotacionaX(-currentCannonAngle);
+
+            posicaoDoCanhao = player;
+            ptoMaximoTrajetoria = posicaoDoCanhao;
+            ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
+            ptoMaximoTrajetoria.rotacionaX(-currentCannonAngle);
+            ptoMaximoTrajetoria.rotacionaX(-forcaTiro);
+            ptoMaximoTrajetoria.rotacionaZ(-currentRotationAngle);
+            finalTrajetoria = Ponto(posicaoDoCanhao.x, -1, ptoMaximoTrajetoria.z-posicaoDoCanhao.z);
+            finalTrajetoria.rotacionaY(currentRotationAngle*2);
             
-            /*
             array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
             trajetoriasDosTiros.push_back(pontosBezier);
             parametrosTrajetoriasTiros.push_back(0.0);
-            */
-            printf("A = (%.2f, %.2f, %.2f)\n", posicaoDoCanhao.x, posicaoDoCanhao.y, posicaoDoCanhao.z);
-            printf("B = (%.2f, %.2f, %.2f)\n", ptoMaximoTrajetoria.x, ptoMaximoTrajetoria.y, ptoMaximoTrajetoria.z);
-            printf("C = (%.2f, %.2f, %.2f)\n", finalTrajetoria.x, finalTrajetoria.y, finalTrajetoria.z);
-            //cout << "-----------------------------------------------------------------------------------------" << endl;
             break;
+        }
         case 'l': // aumentar forca do tiro
-            if (forcaTiro+0.5 > 5) return;
-            forcaTiro+=0.5;
+            if (forcaTiro+1 > 10) return;
+            forcaTiro+=1;
             break;
         case 'k': // reduzir forca do tiro
-            if (forcaTiro-0.5 < 1) return;
-            forcaTiro-=0.5;
+            if (forcaTiro-1 < 5) return;
+            forcaTiro-=1;
             break;
     }
 }
@@ -637,12 +628,10 @@ void arrow_keys ( int a_keys, int x, int y )
 		case GLUT_KEY_UP:       // When Up Arrow Is Pressed...
 			if (currentCannonAngle+5 > 60) currentCannonAngle = 60;
             else                           currentCannonAngle += 5;
-            vetDirecaoCanhao.rotacionaY(currentCannonAngle-prevCannonAngle);
 			break;
 	    case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
-			if (currentCannonAngle-5 < 0) currentCannonAngle = 0;
+			if (currentCannonAngle-5 < 15) currentCannonAngle = 0;
             else                          currentCannonAngle -= 5;
-            vetDirecaoCanhao.rotacionaY(currentCannonAngle-prevCannonAngle);
 			break;
 		default:
 			break;
