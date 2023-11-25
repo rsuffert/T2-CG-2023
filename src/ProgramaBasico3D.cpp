@@ -509,7 +509,7 @@ void display( void )
 	PosicUser();
 	glMatrixMode(GL_MODELVIEW);
     DesenhaPiso();
-    //DesenhaParedao();
+    // DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
     DesenhaTiros();
     DesenhaLinha(posicaoDoCanhao, ptoMaximoTrajetoria);
@@ -540,77 +540,106 @@ void display( void )
 //
 //
 // **********************************************************************
-float forcaTiro = 5;
+float forcaTiro = 4;
 void keyboard ( unsigned char key, int x, int y )
 {
     Ponto temp;
     float distanciaInicioFim;
 	switch ( key )
     {
-        case 27:        // Termina o programa qdo
+        case 27:// Termina o programa qdo
+        {
             exit ( 0 );   // a tecla ESC for pressionada
             break;
+        }
         case 'p':
+        {
             ModoDeProjecao = !ModoDeProjecao;
             glutPostRedisplay();
             break;
+        }
         case 'e':
+        {
             ModoDeExibicao = !ModoDeExibicao;
             init();
             glutPostRedisplay();
             break;
+        }
         case 'a': // mover a cabeca (alvo) para a esquerda
+        {
             currentRotationAngle += 1.5;
             obsTarVector.rotacionaY(1.5);
             target = player + obsTarVector;
             break;
+        }
         case 'd': // mover a cabeca (alvo) para a direita
+        {
             currentRotationAngle -= 1.5;
             obsTarVector.rotacionaY(-1.5);
             target = player + obsTarVector;
             break;
+        }
         case 'w': // andar para a frente
+        {
             temp = player + obsTarVector;
             //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
             //    return;
             player = temp;
             target = target + obsTarVector;
             break;
+        }
         case 's': // andar para tras
+        {
             temp = player - obsTarVector;
             //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
             //    return;
             player = temp;
             target = target - obsTarVector;
             break;
-        case ' ': { // disparar o tiro
-            // TODO: arrumar o calculo dos pontos de controle da curva
-            //posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
-            //ptoMaximoTrajetoria = posicaoDoCanhao - Ponto(0, 0, forcaTiro);
-            //ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
-            //ptoMaximoTrajetoria.rotacionaX(-currentCannonAngle);
-            posicaoDoCanhao = player;
-            ptoMaximoTrajetoria = posicaoDoCanhao;
-            ptoMaximoTrajetoria.rotacionaY(-currentRotationAngle);
-            ptoMaximoTrajetoria.rotacionaX(-currentCannonAngle);
-            ptoMaximoTrajetoria.rotacionaX(-forcaTiro);
-            ptoMaximoTrajetoria.rotacionaZ(-currentRotationAngle);
-            finalTrajetoria = Ponto(posicaoDoCanhao.x, -1, ptoMaximoTrajetoria.z-posicaoDoCanhao.z);
-            finalTrajetoria.rotacionaY(currentRotationAngle*2);
-            
-            array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
+        }      
+        case ' ': // disparar o tiro
+        {
+            Ponto vetDirecaoCanhao = Ponto(0, 0, -1); // Vetor apontando para frente 
+            vetDirecaoCanhao.rotacionaY(currentRotationAngle);
+            vetDirecaoCanhao.rotacionaX(currentCannonAngle);  
+
+            //normalizando o vetor
+            float length = sqrt(vetDirecaoCanhao.x * vetDirecaoCanhao.x +
+                                vetDirecaoCanhao.y * vetDirecaoCanhao.y +
+                                vetDirecaoCanhao.z * vetDirecaoCanhao.z);
+            // Evite dividir por zero
+            if (length != 0.0) {
+                vetDirecaoCanhao.x /= length;
+                vetDirecaoCanhao.y /= length;
+                vetDirecaoCanhao.z /= length;
+            }
+
+            float distanciaDoTiro =  forcaTiro; 
+
+            Ponto posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
+
+            Ponto ptoMaximoTrajetoria = posicaoDoCanhao + (vetDirecaoCanhao * distanciaDoTiro) * 0.6 * forcaTiro;
+
+            Ponto finalTrajetoria =  ptoMaximoTrajetoria + (vetDirecaoCanhao * distanciaDoTiro) * forcaTiro ;
+            finalTrajetoria.y = -10; //para que o tiro sempre desapareca no chao (-10)
+
+            std::array<Ponto, 3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
             trajetoriasDosTiros.push_back(pontosBezier);
             parametrosTrajetoriasTiros.push_back(0.0);
             break;
         }
         case 'l': // aumentar forca do tiro
-            if (forcaTiro+1 > 20) return;
-            forcaTiro+=2;
+        {    
+            if (forcaTiro+1 > 7) return;
+            forcaTiro+=1;
             break;
+        }
         case 'k': // reduzir forca do tiro
-            if (forcaTiro-1 < 5) return;
-            forcaTiro-=2;
+        {
+            if (forcaTiro-1 < 3) return;
+            forcaTiro-=1;
             break;
+        }
     }
 }
 
@@ -625,15 +654,21 @@ void arrow_keys ( int a_keys, int x, int y )
 	switch ( a_keys )
 	{
 		case GLUT_KEY_UP:       // When Up Arrow Is Pressed...
+        {
 			if (currentCannonAngle+5 > 60) currentCannonAngle = 60;
             else                           currentCannonAngle += 5;
 			break;
-	    case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
-			if (currentCannonAngle-5 < 15) currentCannonAngle = 15;
+        }
+        case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
+		{
+        	if (currentCannonAngle-5 < 15) currentCannonAngle = 15;
             else                          currentCannonAngle -= 5;
 			break;
-		default:
+        }
+        default:
+        {
 			break;
+        }
 	}
 }
 
