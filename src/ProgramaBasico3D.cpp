@@ -58,6 +58,7 @@ GLfloat AspectRatio, angulo=0;
 // pela tecla 'p'
 int ModoDeProjecao = 1;
 
+bool ladrilhosMuro[25][15];
 
 // Controle do modo de projecao
 // 0: Wireframe; 1: Faces preenchidas
@@ -68,6 +69,11 @@ int ModoDeExibicao = 1;
 double nFrames=0;
 double TempoTotal=0;
 Ponto CantoEsquerdo = Ponto(-20,-1,-10);
+Ponto CantoEsquerdoParedao;
+const float ANGULO_ROTACAO_PAREDAO = 90;
+const float TRANSLACAO_PAREDAO_X = 0.0;
+const float TRANSLACAO_PAREDAO_Y = 25.0;
+const float TRANSLACAO_PAREDAO_Z = -12.5;
 // **********************************************************************
 //  void init(void)
 //        Inicializa os parametros globais de OpenGL
@@ -105,6 +111,18 @@ void init(void)
         v.inimigo = i%2==0; // metade de amigos e metade de inimigos
         v.vivo = true;
     }
+
+    // inicializar ladrilhos do muro
+    for (int x=0; x<25; x++)
+    {
+        for (int y=0; y<15; y++)
+        {
+            ladrilhosMuro[x][y] = true;
+        }
+    }
+
+    CantoEsquerdoParedao = Ponto(CantoEsquerdo.x+TRANSLACAO_PAREDAO_X, CantoEsquerdo.z+TRANSLACAO_PAREDAO_Y, CantoEsquerdo.y+TRANSLACAO_PAREDAO_Z);
+    CantoEsquerdoParedao.rotacionaX(ANGULO_ROTACAO_PAREDAO);
 }
 
 // **********************************************************************
@@ -262,15 +280,15 @@ void DesenhaParedao()
 {
     // render the wall based on the floor
     glPushMatrix();
-        glRotatef(90, 1,0,0);
+        glRotatef(ANGULO_ROTACAO_PAREDAO, 1,0,0);
 
-        glTranslated(CantoEsquerdo.x, CantoEsquerdo.z+25, CantoEsquerdo.y-12.5);
+        glTranslated(CantoEsquerdo.x+TRANSLACAO_PAREDAO_X, CantoEsquerdo.z+TRANSLACAO_PAREDAO_Y, CantoEsquerdo.y+TRANSLACAO_PAREDAO_Z);
         for(int x=0; x<25;x++)
         {
             glPushMatrix();
             for(int y=0; y<15;y++)
             {
-                DesenhaLadrilho(MediumGoldenrod, Brown);
+                if (ladrilhosMuro[x][y]) DesenhaLadrilho(MediumGoldenrod, Brown); // desenha o ladrilho se ele nao tiver sido destruido
                 glTranslated(0, 0, 1);
             }
             glPopMatrix();
@@ -278,6 +296,7 @@ void DesenhaParedao()
         }
     glPopMatrix();
 }
+
 // **********************************************************************
 //  void DefineLuz(void)
 // **********************************************************************
@@ -464,23 +483,96 @@ void DesenhaEsfera(Ponto p, float raio)
     glPopMatrix();   
 }
 
+/*
+ * Destroi os ladrilhos necessarios, dada a linha e a coluna do ladrilho com que o projetil colidiu.
+ * Os comentarios consideram a seguinte configuracao dos ladrilhos, em que 'E' representa o ladrilho que foi atingido:
+ *      A   B   C
+ *      D   E   F
+ *      G   H   I
+ */
+void DestruirLadrilhosParedao(int linhaLadrilhoCentral, int colunaLadrilhoCentral)
+{
+    ladrilhosMuro[colunaLadrilhoCentral][linhaLadrilhoCentral] = false; // destruir ladrilho E
+
+    // destruir ladrilhos A, B e C
+    if (linhaLadrilhoCentral > 0)
+    {
+        ladrilhosMuro[colunaLadrilhoCentral][linhaLadrilhoCentral-1] = false; // destruir ladrilho B
+        if (colunaLadrilhoCentral > 0)    ladrilhosMuro[colunaLadrilhoCentral-1][linhaLadrilhoCentral-1] = false; // destruir ladrilho A
+        if (colunaLadrilhoCentral < 25-1) ladrilhosMuro[colunaLadrilhoCentral+1][linhaLadrilhoCentral-1] = false; // destruir ladrilho C
+    }
+
+    // destruir ladrilhos G, H e I
+    if (linhaLadrilhoCentral < 15-1)
+    {
+        ladrilhosMuro[colunaLadrilhoCentral][linhaLadrilhoCentral+1] = false; // destruir ladrilho H
+        if (colunaLadrilhoCentral > 0)    ladrilhosMuro[colunaLadrilhoCentral-1][linhaLadrilhoCentral+1] = false; // destruir ladrilho G
+        if (colunaLadrilhoCentral < 25-1) ladrilhosMuro[colunaLadrilhoCentral+1][linhaLadrilhoCentral+1] = false; // destruir ladrilho I
+    }
+
+    if (colunaLadrilhoCentral > 0)    ladrilhosMuro[colunaLadrilhoCentral-1][linhaLadrilhoCentral] = false; // destruir ladrilho D
+    if (colunaLadrilhoCentral < 25-1) ladrilhosMuro[colunaLadrilhoCentral+1][linhaLadrilhoCentral] = false; // destruir ladrilho F
+}
+
+vector<bool> passouDoParedao;
+/*
+ * Calcula a colisao com o paredao e destroi os ladrilhos correspondentes, se houver colisao.
+ * @param localizacaoAtualDoTiro o ponto que representa a localizacao atual do projetil no espaco.
+ * @param idxTiro o indice do tiro.
+ * @return true se houve colisao; false caso contrario.
+ */
+bool CalcularColisaoEDestruirParedao(Ponto localizacaoAtualDoTiro, int idxTiro)
+{
+    if (passouDoParedao[idxTiro]) return false;
+
+    if (localizacaoAtualDoTiro.z <= CantoEsquerdoParedao.z) // colisao em Z
+    {
+        passouDoParedao[idxTiro] = true;
+        if (localizacaoAtualDoTiro.x >= CantoEsquerdoParedao.x && localizacaoAtualDoTiro.x <= CantoEsquerdoParedao.x+25) // colisao em X
+        {
+            if (localizacaoAtualDoTiro.y <= CantoEsquerdoParedao.y && localizacaoAtualDoTiro.y >= CantoEsquerdoParedao.y-15) // colisao em Y
+            {
+                int linhaLadrilho = (int) (CantoEsquerdoParedao.y - localizacaoAtualDoTiro.y);
+                int colunaLadrilho = (int) ((-1)*(CantoEsquerdoParedao.x - localizacaoAtualDoTiro.x));
+                if (!ladrilhosMuro[colunaLadrilho][linhaLadrilho]) return false; // ladrilho ja foi destruido
+                printf("Colisao em l=%d, c=%d\n", linhaLadrilho, colunaLadrilho);
+                DestruirLadrilhosParedao(linhaLadrilho, colunaLadrilho);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 vector<array<Ponto,3>> trajetoriasDosTiros;
 vector<double> parametrosTrajetoriasTiros;
+/*
+ * Desenha os projeteis e os movimenta, alem de calcular colisoes.
+ */
 void DesenhaTiros()
 {
-    // TODO: calcular colisao
     for (int i=0; i<trajetoriasDosTiros.size(); i++)
     {
-        if (parametrosTrajetoriasTiros[i] > 1.0) // o projetil ja terminou a trajetoria ao longo da curva
+        Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
+        DesenhaEsfera(localizacaoAtualDoTiro, 0.5);
+
+        if (parametrosTrajetoriasTiros[i] > 1.0) // o projetil ja terminou a trajetoria ao longo da curva e deve ser removido
         {
             trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
             parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
+            passouDoParedao.erase(passouDoParedao.begin()+i);
         }
-        else // o projetil ainda precisa se deslocar e nao terminou a trajetoria
+        else // o projetil ainda precisa se deslocar e nao terminou a trajetoria (calcular colisao e incrementar posicao)
         {
-            Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
-            DesenhaEsfera(localizacaoAtualDoTiro, 1);
-            parametrosTrajetoriasTiros[i] += 0.02;
+            bool colidiu = CalcularColisaoEDestruirParedao(localizacaoAtualDoTiro, i); // calcular colisao se o tiro ainda nao tiver passado do paredao
+            if (colidiu) // remover tiro
+            {
+                trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
+                parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
+                passouDoParedao.erase(passouDoParedao.begin()+i);
+            }
+            else parametrosTrajetoriasTiros[i] += 0.02;
         }
     }
 }
@@ -509,7 +601,7 @@ void display( void )
 	PosicUser();
 	glMatrixMode(GL_MODELVIEW);
     DesenhaPiso();
-    //DesenhaParedao();
+    DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
     DesenhaTiros();
     DesenhaLinha(posicaoDoCanhao, ptoMaximoTrajetoria);
@@ -601,6 +693,7 @@ void keyboard ( unsigned char key, int x, int y )
             array<Ponto,3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
             trajetoriasDosTiros.push_back(pontosBezier);
             parametrosTrajetoriasTiros.push_back(0.0);
+            passouDoParedao.push_back(false);
             break;
         }
         case 'l': // aumentar forca do tiro
