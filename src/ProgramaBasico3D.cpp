@@ -39,8 +39,8 @@ using namespace std;
 #include "Ponto.h"
 //#include <SOIL/SOIL.h>
 
-#define N_AMIGOS_INIMIGOS 20
-
+const int N_AMIGOS_INIMIGOS = 20;
+int vacasVivas = N_AMIGOS_INIMIGOS;
 Objeto3D vacaModel;
 struct Vaca {
     float posX, posY, posZ;
@@ -574,6 +574,7 @@ bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
                 printf("Voce tem %d pontos \n\n", pontos);
             }  
             v.vivo = false;
+            vacasVivas--;
             return true;
         }
     }
@@ -674,6 +675,13 @@ void display( void )
             else           glColor3f(0.0f, 0.0f, 1.0f);
             vacaModel.ExibeObjeto();
         glPopMatrix();
+    }
+
+    // checar fim do jogo
+    if (vacasVivas <= 0)
+    {
+        printf("FIM DE JOGO! Pontuacao final: %d pts\n", pontos);
+        exit(0);
     }
 
     glutSwapBuffers();
