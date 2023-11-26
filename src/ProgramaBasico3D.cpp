@@ -40,6 +40,7 @@ using namespace std;
 //#include <SOIL/SOIL.h>
 
 #define N_AMIGOS_INIMIGOS 20
+
 Objeto3D vacaModel;
 struct Vaca {
     float posX, posY, posZ;
@@ -49,6 +50,7 @@ Vaca* vacas;
 
 Temporizador T;
 double AccumDeltaT=0;
+int pontos=0;
 
 GLfloat AspectRatio, angulo=0;
 
@@ -535,13 +537,46 @@ bool CalcularColisaoEDestruirParedao(Ponto localizacaoAtualDoTiro, int idxTiro)
                 int linhaLadrilho = (int) (CantoEsquerdoParedao.y - localizacaoAtualDoTiro.y);
                 int colunaLadrilho = (int) ((-1)*(CantoEsquerdoParedao.x - localizacaoAtualDoTiro.x));
                 if (!ladrilhosMuro[colunaLadrilho][linhaLadrilho]) return false; // ladrilho ja foi destruido
-                printf("Colisao em l=%d, c=%d\n", linhaLadrilho, colunaLadrilho);
+                printf("Colisao com o muro, voce ganhou 5 pontos \n", linhaLadrilho, colunaLadrilho);
+                pontos += 5;
+                printf("Voce tem %d pontos \n\n", pontos);
+
                 DestruirLadrilhosParedao(linhaLadrilho, colunaLadrilho);
                 return true;
             }
         }
     }
 
+    return false;
+}
+
+
+bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
+{
+    for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
+    {
+        Vaca& v = vacas[i];
+        if (!v.vivo) continue;// vaca ja foi destruida     
+        
+        Ponto ptVaca = (Ponto(v.posX, v.posY, v.posZ));
+        if (Distancia(localizacaoAtualDoTiro, ptVaca) < 2.0)
+        {
+            if (v.inimigo == false) 
+            {
+                printf("Vaca amiga atingida, Voce perdeu 10 pontos \n");
+                pontos -= 10;
+                printf("Voce tem %d pontos\n\n", pontos);
+            }    
+            else
+            {
+                printf("Vaca inimiga atingida, Voce ganhou 10 pontos \n");
+                pontos += 10;
+                printf("Voce tem %d pontos \n\n", pontos);
+            }  
+            v.vivo = false;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -566,13 +601,16 @@ void DesenhaTiros()
         else // o projetil ainda precisa se deslocar e nao terminou a trajetoria (calcular colisao e incrementar posicao)
         {
             bool colidiu = CalcularColisaoEDestruirParedao(localizacaoAtualDoTiro, i); // calcular colisao se o tiro ainda nao tiver passado do paredao
-            if (colidiu) // remover tiro
+            bool coliVaca = CalcularColisaoEDestruirVaca(localizacaoAtualDoTiro, i);
+            
+            if (colidiu || coliVaca) // remover tiro
             {
                 trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
                 parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
                 passouDoParedao.erase(passouDoParedao.begin()+i);
             }
             else parametrosTrajetoriasTiros[i] += 0.02;
+            
         }
     }
 }
@@ -612,6 +650,8 @@ void display( void )
     {
         Vaca& v = vacas[i];
         //printf("Vaca(%.2f, %.2f, %.2f)\n", v.posX, v.posY, v.posZ);
+        if (!v.vivo) continue;
+
         glPushMatrix();
             glTranslatef(v.posX, v.posY, v.posZ);
             glRotatef(-100, 1, 0, 0);
@@ -723,14 +763,14 @@ void keyboard ( unsigned char key, int x, int y )
         }
         case 'l': // aumentar forca do tiro
         {    
-            if (forcaTiro+1 > 7) return;
-            forcaTiro+=1;
+            if (forcaTiro+1 > 10) return;
+            forcaTiro+=0.5;
             break;
         }
         case 'k': // reduzir forca do tiro
         {
             if (forcaTiro-1 < 3) return;
-            forcaTiro-=1;
+            forcaTiro-=0.5;
             break;
         }
     }

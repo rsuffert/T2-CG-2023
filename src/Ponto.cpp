@@ -228,3 +228,15 @@ long int getContadorInt()
 {
     return ContadorInt;
 }
+
+
+double Distancia(Ponto v1, Ponto v2)
+{
+    // preciso calcualr a distancia entre dois pontos
+    double dx = v1.x - v2.x;
+    double dy = v1.y - v2.y;
+    double dz = v1.z - v2.z;
+
+    return sqrt(dx*dx + dy*dy + dz*dz);
+    
+}
