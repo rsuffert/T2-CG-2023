@@ -6,6 +6,9 @@
 //
 // Marcio Sarroglia Pinho
 // pinho@pucrs.br
+//
+// This game has been developed by: Ricardo Süffert & Vinicius Turani
+// ricardo.suffert@edu.pucrs.br & v.turani@edu.pucrs.br
 // **********************************************************************
 
 #include <iostream>
@@ -781,18 +784,6 @@ void keyboard ( unsigned char key, int x, int y )
             passouDoParedao.push_back(false);
             break;
         }
-        case 'l': // aumentar forca do tiro
-        {    
-            if (forcaTiro+1 > 10) return;
-            forcaTiro+=0.5;
-            break;
-        }
-        case 'k': // reduzir forca do tiro
-        {
-            if (forcaTiro-1 < 3) return;
-            forcaTiro-=0.5;
-            break;
-        }
     }
 }
 
@@ -817,6 +808,18 @@ void arrow_keys ( int a_keys, int x, int y )
         	if (currentCannonAngle-5 < 15) currentCannonAngle = 15;
             else                          currentCannonAngle -= 5;
 			break;
+        }
+        case GLUT_KEY_RIGHT: // aumentar forca do tiro
+        {    
+            if (forcaTiro+1 > 10) return;
+            forcaTiro+=0.5;
+            break;
+        }
+        case GLUT_KEY_LEFT: // reduzir forca do tiro
+        {
+            if (forcaTiro-1 < 3) return;
+            forcaTiro-=0.5;
+            break;
         }
         default:
         {

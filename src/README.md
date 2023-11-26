@@ -4,3 +4,4 @@
 - Use W to move forwards, S to move backwards, A to turn left, and D to turn right;
 - Use up arrow to increase cannon's angle;
 - Use down arrow to descrease cannon's angle.
+- Use right arrow to increase and left arrow to decresase cannon's force.
