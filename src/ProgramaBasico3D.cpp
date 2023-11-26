@@ -592,6 +592,18 @@ void DesenhaTiros()
         Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
         DesenhaEsfera(localizacaoAtualDoTiro, 0.5);
 
+        if (localizacaoAtualDoTiro.y <= CantoEsquerdo.y) // colisao com o chao
+        {
+            printf("Voce perdeu 5 pontos porque atingiu o solo\n");
+            pontos -= 5;
+            printf("Voce tem %d pontos\n\n", pontos);
+
+            // remover tiro
+            trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
+            parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
+            passouDoParedao.erase(passouDoParedao.begin()+i);
+        }
+
         if (parametrosTrajetoriasTiros[i] > 1.0) // o projetil ja terminou a trajetoria ao longo da curva e deve ser removido
         {
             trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
@@ -714,8 +726,8 @@ void keyboard ( unsigned char key, int x, int y )
         case 'w': // andar para a frente
         {
             temp = player + obsTarVector;
-            //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
-            //    return;
+            if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+                return;
             player = temp;
             target = target + obsTarVector;
             break;
@@ -723,8 +735,8 @@ void keyboard ( unsigned char key, int x, int y )
         case 's': // andar para tras
         {
             temp = player - obsTarVector;
-            //if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
-            //    return;
+            if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+                return;
             player = temp;
             target = target - obsTarVector;
             break;
