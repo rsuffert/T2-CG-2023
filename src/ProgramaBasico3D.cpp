@@ -556,6 +556,8 @@ bool CalcularColisaoEDestruirParedao(Ponto localizacaoAtualDoTiro, int idxTiro)
 
 bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
 {
+    if (localizacaoAtualDoTiro.z > CantoEsquerdoParedao.z) return false; // so pode haver colisao com vaca depois que passar do paredao
+
     for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
     {
         Vaca& v = vacas[i];
@@ -564,7 +566,7 @@ bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
         Ponto ptVaca = (Ponto(v.posX, v.posY, v.posZ));
         if (Distancia(localizacaoAtualDoTiro, ptVaca) < 1.5)
         {
-            if (v.inimigo == false) 
+            if (!v.inimigo) 
             {
                 printf("Vaca amiga atingida, Voce perdeu 10 pontos \n");
                 pontos -= 10;

@@ -61,12 +61,15 @@ void Objeto3D::LeObjeto(char *Nome)
 void Objeto3D::ExibeObjeto() 
 {
     for (int i = 0; i < nFaces; i++) {
-        Ponto A = Ponto(faces[i].P2.X, faces[i].P2.Y, faces[i].P2.Z);
-        Ponto B = Ponto(faces[i].P3.X, faces[i].P3.Y, faces[i].P3.Z);
+        Ponto A = Ponto(faces[i].P1.X, faces[i].P1.Y, faces[i].P1.Z);
+        Ponto B = Ponto(faces[i].P2.X, faces[i].P2.Y, faces[i].P2.Z);
+        Ponto C = Ponto(faces[i].P3.X, faces[i].P3.Y, faces[i].P3.Z);
+        Ponto vetAB = B-A;
+        Ponto vetAC = C-A;
         Ponto vetNormal;
-        ProdVetorial(A, B, vetNormal);
+        ProdVetorial(vetAB, vetAC, vetNormal);
+        glNormal3f(vetNormal.x, vetNormal.y, vetNormal.z);
         glBegin(GL_TRIANGLES);
-            glNormal3f(vetNormal.x, vetNormal.y, vetNormal.z);
             glVertex3f(faces[i].P1.X, faces[i].P1.Y, faces[i].P1.Z);
             glVertex3f(faces[i].P2.X, faces[i].P2.Y, faces[i].P2.Z);
             glVertex3f(faces[i].P3.X, faces[i].P3.Y, faces[i].P3.Z);

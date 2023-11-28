@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <glut.h>
+#include "Ponto.h"
 
 typedef struct  // Struct para armazenar um ponto
 {
@@ -16,6 +17,7 @@ typedef struct  // Struct para armazenar um ponto
 typedef struct // Struct para armazenar um triângulo
 {
     TPoint P1, P2, P3;
+    Ponto vetNormal;
     void Imprime();
 } TTriangle;
 
