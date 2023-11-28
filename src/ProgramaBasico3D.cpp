@@ -562,7 +562,7 @@ bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
         if (!v.vivo) continue;// vaca ja foi destruida     
         
         Ponto ptVaca = (Ponto(v.posX, v.posY, v.posZ));
-        if (Distancia(localizacaoAtualDoTiro, ptVaca) < 2.0)
+        if (Distancia(localizacaoAtualDoTiro, ptVaca) < 1.5)
         {
             if (v.inimigo == false) 
             {
@@ -594,7 +594,7 @@ void DesenhaTiros()
     for (int i=0; i<trajetoriasDosTiros.size(); i++)
     {
         Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
-        DesenhaEsfera(localizacaoAtualDoTiro, 0.5);
+        DesenhaEsfera(localizacaoAtualDoTiro, 0.3);
 
         if (localizacaoAtualDoTiro.y <= CantoEsquerdo.y) // colisao com o chao
         {
@@ -658,8 +658,6 @@ void display( void )
     DesenhaParedao();
     DesenhaCanhao(currentRotationAngle, currentCannonAngle);
     DesenhaTiros();
-    DesenhaLinha(posicaoDoCanhao, ptoMaximoTrajetoria);
-    DesenhaLinha(ptoMaximoTrajetoria, finalTrajetoria);
 
     // exibir as vacas
     for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
