@@ -382,20 +382,19 @@ void PosicUser()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    
+    /*
     // third person view (from behind) following the player
     gluLookAt(player.x, player.y+3, player.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
+    */
     
-
    // third person (static)
-    // gluLookAt(
-    //     -9, 3.5, 43,
-    //     -9, 0, 34.92,
-    //     0.0f, 1.0f, 0.0f
-    // );
-    
+    gluLookAt(
+         -9, 3.5, 43,
+         -9, 0, 34.92,
+         0.0f, 1.0f, 0.0f
+    );
     
     // // top view
     // gluLookAt(player.x, player.y+10, player.z,   // Posi��o do Observador
@@ -558,7 +557,7 @@ bool CalcularColisaoEDestruirVacaAtropelada(Ponto localizacaoAtualDoTanque)
 {
     for (int i = 0; i < N_AMIGOS_INIMIGOS; i++) {
         Vaca &v = vacas[i];
-        if (!v.vivo) return false; // Vaca já foi destruída
+        if (!v.vivo) continue; // Vaca já foi destruída
 
             // Ponto vacaAtual (v.posX, v.posY, v.posZ);
             // if( Distancia(localizacaoAtualDoTanque, vacaAtual) < 4)
@@ -576,16 +575,23 @@ bool CalcularColisaoEDestruirVacaAtropelada(Ponto localizacaoAtualDoTanque)
             double distancia = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
 
             if (distancia < 4) {
+                if (v.inimigo)
+                {
+                    printf("Tanque atropelou vaca inimiga. Voce ganhou 10 pontos\n");
+                    pontos += 10;
+                    printf("Voce tem %d pontos\n\n", pontos);
+                }
+                else
+                {
+                    printf("Tanque atropelou vaca amiga. Voce perdeu 10 pontos\n");
+                    pontos -= 10;
+                    printf("Voce tem %d pontos\n\n", pontos);
+                }
                 v.vivo = false;
-                printf("Tanque atropelou a vaca");
-                return true; // Indica que houve colisão
-}
-        
-        
+            }
     }
     return false; // Não houve colisão
 }
-
 
 bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
 {
@@ -833,7 +839,7 @@ void keyboard ( unsigned char key, int x, int y )
             temp = player + obsTarVector;
             if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
-            // if (ColisaoComParedao(player, temp)) return;
+            if (ColisaoComParedao(player, temp)) return;
 
             player = temp;
             target = target + obsTarVector;
@@ -845,7 +851,7 @@ void keyboard ( unsigned char key, int x, int y )
             temp = player - obsTarVector;
             if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
-            // if (ColisaoComParedao(player, temp)) return;
+            if (ColisaoComParedao(player, temp)) return;
 
             player = temp;
             target = target - obsTarVector;
