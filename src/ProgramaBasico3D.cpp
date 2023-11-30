@@ -10,6 +10,7 @@
 // This game has been developed by: Ricardo Süffert & Vinicius Turani
 // ricardo.suffert@edu.pucrs.br & v.turani@edu.pucrs.br
 // **********************************************************************
+#include <Windows.h>
 
 #include <iostream>
 #include <cmath>
@@ -141,7 +142,7 @@ void animate()
     TempoTotal += dt;
     nFrames++;
 
-    if (AccumDeltaT > 1.0/30) // fixa a atualiza��o da tela em 30
+    if (AccumDeltaT > 1.0/25) // fixa a atualiza��o da tela em 30
     {
         AccumDeltaT = 0;
         angulo+= 1;
@@ -359,7 +360,7 @@ void MygluPerspective(float fieldOfView, float aspect, float zNear, float zFar )
 }
 
 Ponto player       = Ponto(-9, 0, 35);
-Ponto target       = Ponto(-9, 0, 34.94);
+Ponto target       = Ponto(-9, 0, 34.92);
 Ponto obsTarVector = target-player;
 // **********************************************************************
 //  void PosicUser()
@@ -586,6 +587,30 @@ bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
     return false;
 }
 
+bool CalcularColisaoCanhao(Ponto localizacaoAtualDoTiro, int idxTiro)
+{
+    // const float CANNON_OFFSET_TO_BASE_X = 0.0;
+    // const float CANNON_OFFSET_TO_BASE_Y = 1.15;
+    // const float CANNON_OFFSET_TO_BASE_Z = -0.7;
+
+    //Criaçao do envelope do tanque
+    if (localizacaoAtualDoTiro.y < (player.y))
+    {
+        if (localizacaoAtualDoTiro.x > player.x -CANNON_OFFSET_TO_BASE_X - 1 && localizacaoAtualDoTiro.x < player.x + CANNON_OFFSET_TO_BASE_X + 1)
+        {
+            if ((localizacaoAtualDoTiro.z < player.z + 1.5) && (localizacaoAtualDoTiro.z > player.z - 1.5))
+            {
+                printf("Voce atirou em si mesmo, Voce perdeu o jogo \n");
+                printf("Voce perdeu com %d pontos\n\n", pontos);
+                exit(0);
+            }
+        }
+    }
+  
+    return false;
+}
+
+
 vector<array<Ponto,3>> trajetoriasDosTiros;
 vector<double> parametrosTrajetoriasTiros;
 /*
@@ -620,7 +645,7 @@ void DesenhaTiros()
         {
             bool colidiu = CalcularColisaoEDestruirParedao(localizacaoAtualDoTiro, i); // calcular colisao se o tiro ainda nao tiver passado do paredao
             bool coliVaca = CalcularColisaoEDestruirVaca(localizacaoAtualDoTiro, i);
-            
+            bool coliCanhao = CalcularColisaoCanhao(localizacaoAtualDoTiro, i);
             if (colidiu || coliVaca) // remover tiro
             {
                 trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
@@ -665,7 +690,7 @@ void display( void )
     for (int i=0; i<N_AMIGOS_INIMIGOS; i++)
     {
         Vaca& v = vacas[i];
-        //printf("Vaca(%.2f, %.2f, %.2f)\n", v.posX, v.posY, v.posZ);
+        // printf("Vaca(%.2f, %.2f, %.2f)\n", v.posX, v.posY, v.posZ);
         if (!v.vivo) continue;
 
         glPushMatrix();
@@ -680,8 +705,16 @@ void display( void )
         glPopMatrix();
     }
 
+
+    int vacasInimigasVivas = 0;
+    for (int i = 0; i < N_AMIGOS_INIMIGOS; i++) {
+        if (vacas[i].vivo && vacas[i].inimigo) {
+            vacasInimigasVivas++;
+        }
+    }
+    
     // checar fim do jogo
-    if (vacasVivas <= 0)
+    if (vacasInimigasVivas <= 0)
     {
         printf("FIM DE JOGO! Pontuacao final: %d pts\n", pontos);
         exit(0);
@@ -720,20 +753,6 @@ void keyboard ( unsigned char key, int x, int y )
             glutPostRedisplay();
             break;
         }
-        case 'a': // mover a cabeca (alvo) para a esquerda
-        {
-            currentRotationAngle += 1.5;
-            obsTarVector.rotacionaY(1.5);
-            target = player + obsTarVector;
-            break;
-        }
-        case 'd': // mover a cabeca (alvo) para a direita
-        {
-            currentRotationAngle -= 1.5;
-            obsTarVector.rotacionaY(-1.5);
-            target = player + obsTarVector;
-            break;
-        }
         case 'w': // andar para a frente
         {
             temp = player + obsTarVector;
@@ -751,31 +770,65 @@ void keyboard ( unsigned char key, int x, int y )
             player = temp;
             target = target - obsTarVector;
             break;
-        }      
+        }  
+        case 'a': // mover a cabeça (alvo) para a esquerda
+        {
+            if (currentRotationAngle + 1.5 > 360)
+            {
+                int var = 360 - currentRotationAngle;
+                currentRotationAngle = 0;
+                obsTarVector.rotacionaY(var);
+            }    
+            else                             
+            {
+                currentRotationAngle += 1.5;
+                obsTarVector.rotacionaY(1.5);
+            }
+            
+            target = player + obsTarVector;
+
+            // Ajuste para manter o ângulo dentro do intervalo de 0 a 360 graus
+            if (currentRotationAngle >= 360) {
+                currentRotationAngle -= 360;
+            }
+            break;
+        }
+        case 'd': // mover a cabeça (alvo) para a direita
+        {
+            if (currentRotationAngle - 1.5 < 0)
+            {
+                
+                int var = 1.5 - currentRotationAngle;
+                currentRotationAngle = 360 - var;
+                obsTarVector.rotacionaY(currentRotationAngle);
+            }    
+            else                             
+            {
+                currentRotationAngle -= 1.5;
+                obsTarVector.rotacionaY(-1.5);
+            }
+
+            target = player + obsTarVector;
+
+            // Ajuste para manter o ângulo dentro do intervalo de 0 a 360 graus
+            if (currentRotationAngle < 0) {
+                currentRotationAngle += 360;
+            }
+            break;
+        }    
         case ' ': // disparar o tiro
         {
             Ponto vetDirecaoCanhao = Ponto(0, 0, -1); // Vetor apontando para frente 
             vetDirecaoCanhao.rotacionaY(currentRotationAngle);
             vetDirecaoCanhao.rotacionaX(currentCannonAngle);  
 
-            //normalizando o vetor
-            float length = sqrt(vetDirecaoCanhao.x * vetDirecaoCanhao.x +
-                                vetDirecaoCanhao.y * vetDirecaoCanhao.y +
-                                vetDirecaoCanhao.z * vetDirecaoCanhao.z);
-            // Evite dividir por zero
-            if (length != 0.0) {
-                vetDirecaoCanhao.x /= length;
-                vetDirecaoCanhao.y /= length;
-                vetDirecaoCanhao.z /= length;
-            }
-
-            float distanciaDoTiro =  forcaTiro; 
 
             Ponto posicaoDoCanhao = player + Ponto(CANNON_OFFSET_TO_BASE_X, CANNON_OFFSET_TO_BASE_Y, CANNON_OFFSET_TO_BASE_Z);
 
-            Ponto ptoMaximoTrajetoria = posicaoDoCanhao + (vetDirecaoCanhao * distanciaDoTiro) * 0.6 * forcaTiro;
+            Ponto ptoMaximoTrajetoria = posicaoDoCanhao + (vetDirecaoCanhao * forcaTiro) * 0.6 * forcaTiro;
+            ptoMaximoTrajetoria.y = forcaTiro + currentCannonAngle*0.2;
 
-            Ponto finalTrajetoria =  ptoMaximoTrajetoria + (vetDirecaoCanhao * distanciaDoTiro) * forcaTiro ;
+            Ponto finalTrajetoria =  ptoMaximoTrajetoria + (vetDirecaoCanhao * forcaTiro) * forcaTiro ;
             finalTrajetoria.y = -10; //para que o tiro sempre desapareca no chao (-10)
 
             std::array<Ponto, 3> pontosBezier = {posicaoDoCanhao, ptoMaximoTrajetoria, finalTrajetoria};
@@ -799,19 +852,21 @@ void arrow_keys ( int a_keys, int x, int y )
 	{
 		case GLUT_KEY_UP:       // When Up Arrow Is Pressed...
         {
-			if (currentCannonAngle+5 > 60) currentCannonAngle = 60;
+			if (currentCannonAngle+5 > 90) currentCannonAngle = 90;
             else                           currentCannonAngle += 5;
+            currentCannonAngle += 5;
 			break;
         }
         case GLUT_KEY_DOWN:     // When Down Arrow Is Pressed...
 		{
         	if (currentCannonAngle-5 < 15) currentCannonAngle = 15;
             else                          currentCannonAngle -= 5;
+            currentCannonAngle -= 5;
 			break;
         }
         case GLUT_KEY_RIGHT: // aumentar forca do tiro
         {    
-            if (forcaTiro+1 > 10) return;
+            if (forcaTiro+1 > 13) return;
             forcaTiro+=0.5;
             break;
         }
@@ -853,6 +908,4 @@ int main ( int argc, char** argv )
 	glutMainLoop ( );
 	return 0;
 }
-
-
 
