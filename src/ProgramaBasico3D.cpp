@@ -382,26 +382,26 @@ void PosicUser()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    /*
+    
     // third person view (from behind) following the player
     gluLookAt(player.x, player.y+3, player.z+7,   // Posi��o do Observador
               target.x,target.y,target.z,     // Posi��o do Alvo
               0.0f,1.0f,0.0f);
-    */
+    
 
    // third person (static)
-    gluLookAt(
-        -9, 3.5, 43,
-        -9, 0, 34.92,
-        0.0f, 1.0f, 0.0f
-    );
+    // gluLookAt(
+    //     -9, 3.5, 43,
+    //     -9, 0, 34.92,
+    //     0.0f, 1.0f, 0.0f
+    // );
     
-    /*
-    // top view
-    gluLookAt(player.x, player.y+10, player.z,   // Posi��o do Observador
-              target.x,target.y,target.z,     // Posi��o do Alvo
-              0.0f,1.0f,0.0f);
-    */
+    
+    // // top view
+    // gluLookAt(player.x, player.y+10, player.z,   // Posi��o do Observador
+    //           target.x,target.y,target.z,     // Posi��o do Alvo
+    //           0.0f,1.0f,0.0f);
+    
 
    /*
    // side view
@@ -554,6 +554,38 @@ bool CalcularColisaoEDestruirParedao(Ponto localizacaoAtualDoTiro, int idxTiro)
     return false;
 }
 
+bool CalcularColisaoEDestruirVacaAtropelada(Ponto localizacaoAtualDoTanque)
+{
+    for (int i = 0; i < N_AMIGOS_INIMIGOS; i++) {
+        Vaca &v = vacas[i];
+        if (!v.vivo) return false; // Vaca já foi destruída
+
+            // Ponto vacaAtual (v.posX, v.posY, v.posZ);
+            // if( Distancia(localizacaoAtualDoTanque, vacaAtual) < 4)
+            // {
+            //     v.vivo = false;
+            //     printf("Tanque atropelou a vaca");
+            //     return true; // Indica que houve colisão
+            // }
+
+            Ponto vacaAtual(v.posX, v.posY, v.posZ);
+            double deltaX = localizacaoAtualDoTanque.x - vacaAtual.x;
+            double deltaY = localizacaoAtualDoTanque.y - vacaAtual.y;
+            double deltaZ = localizacaoAtualDoTanque.z - vacaAtual.z;
+
+            double distancia = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+            if (distancia < 4) {
+                v.vivo = false;
+                printf("Tanque atropelou a vaca");
+                return true; // Indica que houve colisão
+}
+        
+        
+    }
+    return false; // Não houve colisão
+}
+
 
 bool CalcularColisaoEDestruirVaca(Ponto localizacaoAtualDoTiro, int idxTiro)
 {
@@ -596,7 +628,6 @@ bool CalcularColisaoCanhao(Ponto localizacaoAtualDoTiro, int idxTiro)
     //Criaçao do envelope do tanque
     if (localizacaoAtualDoTiro.y <= (player.y))
     {
-        
         if (localizacaoAtualDoTiro.x > player.x -CANNON_OFFSET_TO_BASE_X - 2.5 && localizacaoAtualDoTiro.x < player.x + CANNON_OFFSET_TO_BASE_X + 2.5)
         {
             if ((localizacaoAtualDoTiro.z < player.z + 3.5) && (localizacaoAtualDoTiro.z > player.z - 3.5))
@@ -750,6 +781,23 @@ bool ColisaoComParedao(Ponto& player, Ponto& target)
     return false;
 }
 
+
+// bool ColisaoComParedao()
+// {
+//     if (abs(player.z-CantoEsquerdoParedao.z) > 3.5) return false;
+
+//     int colunaLadrilho = ((int) (player.x - CantoEsquerdoParedao.x))+1;
+//     if (ladrilhosMuro[colunaLadrilho][14]) return true;
+
+//     // para ter largura para o canhao passar, dois ladrilhos da direita e dois da esquerda devem estar quebrados tambem
+//     if (colunaLadrilho > 1)
+//         if (ladrilhosMuro[colunaLadrilho-1][14] || ladrilhosMuro[colunaLadrilho-2][14]) return true;
+//     if (colunaLadrilho < 23)
+//         if (ladrilhosMuro[colunaLadrilho+1][14] || ladrilhosMuro[colunaLadrilho+2][14]) return true;
+
+//     return false;
+// }
+
 // **********************************************************************
 //  void keyboard ( unsigned char key, int x, int y )
 //
@@ -785,10 +833,11 @@ void keyboard ( unsigned char key, int x, int y )
             temp = player + obsTarVector;
             if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
-            if (ColisaoComParedao(player, temp)) return;
+            // if (ColisaoComParedao(player, temp)) return;
 
             player = temp;
             target = target + obsTarVector;
+            
             break;
         }
         case 's': // andar para tras
@@ -796,7 +845,7 @@ void keyboard ( unsigned char key, int x, int y )
             temp = player - obsTarVector;
             if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
-            if (ColisaoComParedao(player, temp)) return;
+            // if (ColisaoComParedao(player, temp)) return;
 
             player = temp;
             target = target - obsTarVector;
@@ -869,6 +918,9 @@ void keyboard ( unsigned char key, int x, int y )
             break;
         }
     }
+    
+    CalcularColisaoEDestruirVacaAtropelada(player);
+    
 }
 
 // **********************************************************************
