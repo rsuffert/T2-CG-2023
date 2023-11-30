@@ -723,6 +723,22 @@ void display( void )
     glutSwapBuffers();
 }
 
+bool ColisaoComParedao()
+{
+    if (abs(player.z-CantoEsquerdoParedao.z) > 3.5) return false;
+
+    int colunaLadrilho = ((int) (player.x - CantoEsquerdoParedao.x))+1;
+    if (ladrilhosMuro[colunaLadrilho][14]) return true;
+
+    // para ter largura para o canhao passar, dois ladrilhos da direita e dois da esquerda devem estar quebrados tambem
+    if (colunaLadrilho > 1)
+        if (ladrilhosMuro[colunaLadrilho-1][14] || ladrilhosMuro[colunaLadrilho-2][14]) return true;
+    if (colunaLadrilho < 23)
+        if (ladrilhosMuro[colunaLadrilho+1][14] || ladrilhosMuro[colunaLadrilho+2][14]) return true;
+
+    return false;
+}
+
 // **********************************************************************
 //  void keyboard ( unsigned char key, int x, int y )
 //
@@ -756,8 +772,10 @@ void keyboard ( unsigned char key, int x, int y )
         case 'w': // andar para a frente
         {
             temp = player + obsTarVector;
-            if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+            if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
+            if (ColisaoComParedao()) return;
+
             player = temp;
             target = target + obsTarVector;
             break;
@@ -765,8 +783,9 @@ void keyboard ( unsigned char key, int x, int y )
         case 's': // andar para tras
         {
             temp = player - obsTarVector;
-            if ( (temp.z <= CantoEsquerdo.z+27) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
+            if ( (temp.z <= CantoEsquerdo.z) || (temp.z >= CantoEsquerdo.z+49.5) || (temp.x >= CantoEsquerdo.x+24) || (temp.x <= CantoEsquerdo.x) ) 
                 return;
+
             player = temp;
             target = target - obsTarVector;
             break;
