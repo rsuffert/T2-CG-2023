@@ -602,10 +602,9 @@ bool CalcularColisaoCanhao(Ponto localizacaoAtualDoTiro, int idxTiro)
             if ((localizacaoAtualDoTiro.z < player.z + 3.5) && (localizacaoAtualDoTiro.z > player.z - 3.5))
             {
                 printf("Voce atirou em si mesmo, Voce perdeu o jogo \n");
-                return true;
-                printf("Voce atirou em si mesmo, Voce perdeu o jogo \n");
                 printf("Voce perdeu com %d pontos\n\n", pontos);
                 exit(0);
+                return true;
             }
         }
     }
