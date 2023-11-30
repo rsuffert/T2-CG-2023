@@ -594,12 +594,15 @@ bool CalcularColisaoCanhao(Ponto localizacaoAtualDoTiro, int idxTiro)
     // const float CANNON_OFFSET_TO_BASE_Z = -0.7;
 
     //Criaçao do envelope do tanque
-    if (localizacaoAtualDoTiro.y < (player.y))
+    if (localizacaoAtualDoTiro.y <= (player.y))
     {
-        if (localizacaoAtualDoTiro.x > player.x -CANNON_OFFSET_TO_BASE_X - 1 && localizacaoAtualDoTiro.x < player.x + CANNON_OFFSET_TO_BASE_X + 1)
+        
+        if (localizacaoAtualDoTiro.x > player.x -CANNON_OFFSET_TO_BASE_X - 2.5 && localizacaoAtualDoTiro.x < player.x + CANNON_OFFSET_TO_BASE_X + 2.5)
         {
-            if ((localizacaoAtualDoTiro.z < player.z + 1.5) && (localizacaoAtualDoTiro.z > player.z - 1.5))
+            if ((localizacaoAtualDoTiro.z < player.z + 3.5) && (localizacaoAtualDoTiro.z > player.z - 3.5))
             {
+                printf("Voce atirou em si mesmo, Voce perdeu o jogo \n");
+                return true;
                 printf("Voce atirou em si mesmo, Voce perdeu o jogo \n");
                 printf("Voce perdeu com %d pontos\n\n", pontos);
                 exit(0);
@@ -620,6 +623,7 @@ void DesenhaTiros()
 {
     for (int i=0; i<trajetoriasDosTiros.size(); i++)
     {
+       
         Ponto localizacaoAtualDoTiro = CalculaBezier3(trajetoriasDosTiros[i].data(), parametrosTrajetoriasTiros[i]);
         DesenhaEsfera(localizacaoAtualDoTiro, 0.3);
 
@@ -646,7 +650,7 @@ void DesenhaTiros()
             bool colidiu = CalcularColisaoEDestruirParedao(localizacaoAtualDoTiro, i); // calcular colisao se o tiro ainda nao tiver passado do paredao
             bool coliVaca = CalcularColisaoEDestruirVaca(localizacaoAtualDoTiro, i);
             bool coliCanhao = CalcularColisaoCanhao(localizacaoAtualDoTiro, i);
-            if (colidiu || coliVaca) // remover tiro
+            if (colidiu || coliVaca || coliCanhao) // remover tiro
             {
                 trajetoriasDosTiros.erase(trajetoriasDosTiros.begin()+i);
                 parametrosTrajetoriasTiros.erase(parametrosTrajetoriasTiros.begin()+i);
